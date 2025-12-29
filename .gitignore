@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+nul
+
+# Model checkpoints and weights (keep private)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+checkpoints/
+weights/
