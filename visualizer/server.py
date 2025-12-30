@@ -4,7 +4,7 @@ Serves visualization data and handles live inference.
 """
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, List, Union
 from dataclasses import asdict
 from contextlib import asynccontextmanager
 
@@ -104,7 +104,7 @@ class BatchSequenceItem(BaseModel):
 class BatchInput(BaseModel):
     """Batch encoding input."""
     format: str = "json"  # json, fasta, csv, tsv
-    sequences: any  # List[BatchSequenceItem] for json, str for fasta/csv/tsv
+    sequences: Union[List[dict], str]  # List of dicts for json, str for fasta/csv/tsv
 
 
 # =============================================================================
