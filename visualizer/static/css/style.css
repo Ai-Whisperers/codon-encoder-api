@@ -1,0 +1,601 @@
+/**
+ * Codon Encoder Visualizer - Styles
+ * Interactive visualization of hyperbolic codon embeddings
+ */
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Courier New", monospace;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  overflow: hidden;
+}
+
+#container {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* =============================================================================
+   CONTROLS PANEL - Scrollable with collapsible sections
+   ============================================================================= */
+#controls {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 10px;
+  width: 280px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+/* Custom scrollbar for controls */
+#controls::-webkit-scrollbar {
+  width: 6px;
+}
+
+#controls::-webkit-scrollbar-track {
+  background: #1a1a24;
+  border-radius: 3px;
+}
+
+#controls::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+#controls::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+#controls h2 {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #88ccff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+  position: sticky;
+  top: -10px;
+  background: rgba(20, 20, 30, 0.98);
+  margin: -10px -10px 8px -10px;
+  padding: 10px;
+}
+
+/* =============================================================================
+   COLLAPSIBLE SECTIONS
+   ============================================================================= */
+.control-section {
+  margin-bottom: 6px;
+  border: 1px solid #333;
+  border-radius: 3px;
+  background: rgba(15, 15, 20, 0.5);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  color: #88ccff;
+  background: rgba(30, 40, 60, 0.5);
+  border-radius: 2px 2px 0 0;
+  user-select: none;
+}
+
+.section-header:hover {
+  background: rgba(40, 50, 70, 0.6);
+}
+
+.section-toggle {
+  margin-right: 6px;
+  font-size: 8px;
+  transition: transform 0.2s;
+}
+
+.section-info {
+  margin-left: auto;
+  font-size: 9px;
+  color: #88ccff;
+  font-weight: normal;
+}
+
+.section-content {
+  padding: 8px;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+
+.control-section.collapsed .section-content {
+  max-height: 0;
+  padding: 0 8px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.control-section.collapsed .section-header {
+  border-radius: 2px;
+}
+
+/* =============================================================================
+   CONTROL GROUPS
+   ============================================================================= */
+.control-group {
+  margin-bottom: 8px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+.control-group label {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 3px;
+}
+
+.control-group select,
+.control-group input[type="range"] {
+  width: 100%;
+  background: #1a1a24;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 4px;
+  border-radius: 2px;
+  font-size: 10px;
+}
+
+.control-group input[type="text"] {
+  width: 100%;
+  background: #1a1a24;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 5px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
+}
+
+.control-row input[type="checkbox"] {
+  width: auto;
+}
+
+.control-row input[type="range"] {
+  flex: 1;
+}
+
+.control-row span {
+  font-size: 9px;
+  color: #666;
+  min-width: 28px;
+}
+
+/* =============================================================================
+   BUTTONS
+   ============================================================================= */
+button {
+  background: #2a4a6a;
+  border: 1px solid #3a6a9a;
+  color: #ddd;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  margin-right: 3px;
+}
+
+button:hover {
+  background: #3a5a7a;
+}
+
+button.active {
+  background: #4a7aaa;
+  border-color: #6a9aca;
+}
+
+/* =============================================================================
+   SHORTCUTS FOOTER
+   ============================================================================= */
+.shortcuts-footer {
+  margin-top: 8px;
+  font-size: 8px;
+  color: #555;
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  line-height: 1.5;
+}
+
+.shortcuts-footer strong {
+  color: #666;
+}
+
+/* =============================================================================
+   INFO PANEL - Collapsible
+   ============================================================================= */
+#info {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+#info.collapsed .panel-content {
+  max-height: 0;
+  padding: 0 12px;
+  opacity: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: rgba(30, 40, 60, 0.5);
+}
+
+.panel-header:hover {
+  background: rgba(40, 50, 70, 0.6);
+}
+
+.panel-header h3,
+.panel-header h4 {
+  margin: 0;
+  font-size: 11px;
+  color: #88ccff;
+}
+
+.panel-toggle {
+  font-size: 8px;
+  color: #666;
+}
+
+.panel-content {
+  padding: 10px 12px;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+
+#info h3 {
+  font-size: 11px;
+  color: #88ccff;
+  margin-bottom: 6px;
+}
+
+#info .stat {
+  font-size: 10px;
+  margin: 3px 0;
+}
+
+#info .stat span {
+  color: #ffcc44;
+}
+
+/* =============================================================================
+   TOOLTIP
+   ============================================================================= */
+#tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-size: 11px;
+  pointer-events: none;
+  display: none;
+  z-index: 200;
+  max-width: 250px;
+}
+
+#tooltip .codon {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffcc44;
+}
+
+#tooltip .aa {
+  color: #88ff88;
+}
+
+/* =============================================================================
+   SEQUENCE PANEL - Collapsible & Resizable
+   ============================================================================= */
+#sequence-panel {
+  position: fixed;
+  bottom: 10px;
+  left: 300px;
+  right: 10px;
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  z-index: 100;
+  overflow: hidden;
+  min-height: 40px;
+}
+
+#sequence-panel.collapsed .panel-content {
+  max-height: 0;
+  padding: 0 12px;
+  opacity: 0;
+}
+
+#sequence-panel .panel-content {
+  max-height: 300px;
+  overflow-y: auto;
+  resize: vertical;
+  min-height: 60px;
+}
+
+#sequence-panel.expanded .panel-content {
+  max-height: 500px;
+}
+
+#sequence-panel h3 {
+  font-size: 11px;
+  color: #88ccff;
+  margin: 0;
+}
+
+#sequence-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#sequence-panel .expand-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 6px;
+  margin-left: 8px;
+}
+
+#sequence-panel .expand-btn:hover {
+  color: #88ccff;
+}
+
+#sequence-output {
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.codon-chip {
+  display: inline-block;
+  padding: 2px 5px;
+  margin: 1px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 9px;
+  transition: transform 0.1s;
+}
+
+.codon-chip:hover {
+  transform: scale(1.1);
+}
+
+.codon-chip.active {
+  box-shadow: 0 0 8px #fff;
+}
+
+/* =============================================================================
+   LEGEND - Collapsible
+   ============================================================================= */
+#legend {
+  position: fixed;
+  bottom: 150px;
+  right: 10px;
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  z-index: 100;
+  overflow: hidden;
+  min-width: 150px;
+}
+
+#legend.collapsed .panel-content {
+  max-height: 0;
+  padding: 0 10px;
+  opacity: 0;
+}
+
+#legend h4 {
+  font-size: 10px;
+  color: #888;
+  margin: 0;
+}
+
+#legend .panel-content {
+  padding: 8px 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  margin: 2px 0;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   SEQUENCE TABLE
+   ============================================================================= */
+.sequence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+
+.sequence-table th,
+.sequence-table td {
+  padding: 2px 4px;
+  border: 1px solid #333;
+  text-align: center;
+}
+
+.sequence-table th {
+  background: #1a1a2e;
+  color: #88ccff;
+  font-weight: bold;
+}
+
+.sequence-table tr:nth-child(even) {
+  background: #0f0f1a;
+}
+
+.sequence-table tr:hover {
+  background: #1a1a3a;
+}
+
+.codon-cell {
+  font-family: monospace;
+  font-weight: bold;
+  color: #00ff88;
+}
+
+.sequence-summary {
+  font-size: 9px;
+  padding: 5px;
+  background: #1a1a2e;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.sequence-summary strong {
+  color: #88ccff;
+}
+
+/* =============================================================================
+   FILTER CONTROLS
+   ============================================================================= */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #88ccff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #88ccff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Dimmed control row */
+.control-row.dimmed {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Control group with inline elements */
+.control-group select {
+  font-size: 10px;
+}
+
+.control-group optgroup {
+  font-weight: bold;
+  color: #88ccff;
+}
+
+.control-group option {
+  font-weight: normal;
+  color: #ddd;
+}
+
+/* =============================================================================
+   RESPONSIVE - Very small screens
+   ============================================================================= */
+@media (max-height: 700px) {
+  #controls {
+    padding: 8px;
+  }
+
+  #controls h2 {
+    font-size: 12px;
+    padding: 8px;
+    margin: -8px -8px 6px -8px;
+  }
+
+  .section-header {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .section-content {
+    padding: 6px;
+  }
+
+  .control-group {
+    margin-bottom: 6px;
+  }
+
+  button {
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  #controls {
+    width: 240px;
+    font-size: 9px;
+  }
+
+  #sequence-panel {
+    left: 250px;
+  }
+}

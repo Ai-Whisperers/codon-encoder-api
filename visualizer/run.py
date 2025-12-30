@@ -32,36 +32,16 @@ Examples:
   python run.py ../other_model.pt         # Different model
   python run.py --export data.json        # Export visualization data
   python run.py --test                    # Run model tests only
-        """
+        """,
     )
 
     parser.add_argument(
-        "model_path",
-        nargs="?",
-        default=None,
-        help="Path to .pt model file (default: codon_encoder.pt)"
+        "model_path", nargs="?", default=None, help="Path to .pt model file (default: codon_encoder.pt)"
     )
-    parser.add_argument(
-        "--host",
-        default="127.0.0.1",
-        help="Server host (default: 127.0.0.1)"
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=8765,
-        help="Server port (default: 8765)"
-    )
-    parser.add_argument(
-        "--export",
-        metavar="FILE",
-        help="Export visualization data to JSON file"
-    )
-    parser.add_argument(
-        "--test",
-        action="store_true",
-        help="Run model loader test without starting server"
-    )
+    parser.add_argument("--host", default="127.0.0.1", help="Server host (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8765, help="Server port (default: 8765)")
+    parser.add_argument("--export", metavar="FILE", help="Export visualization data to JSON file")
+    parser.add_argument("--test", action="store_true", help="Run model loader test without starting server")
 
     args = parser.parse_args()
 
@@ -85,7 +65,7 @@ Examples:
         loader = ModelLoader().load()
         json_data = loader.to_json()
 
-        with open(args.export, 'w') as f:
+        with open(args.export, "w") as f:
             f.write(json_data)
         print(f"Exported to: {args.export}")
         return
@@ -93,15 +73,18 @@ Examples:
     # Test mode
     if args.test:
         from config import Config
+
         if model_path:
             Config.set_model_path(model_path)
 
         from model_loader import main as test_main
+
         test_main()
         return
 
     # Start server - pass model_path to run()
     from server import run
+
     run(host=args.host, port=args.port, model_path=model_path)
 
 

@@ -1,1654 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Codon Encoder Visualizer</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0a0f;
-            color: #e0e0e0;
-            overflow: hidden;
-        }
-        #container { width: 100vw; height: 100vh; }
-
-        #controls {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(20, 20, 30, 0.9);
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 12px;
-            min-width: 280px;
-            z-index: 100;
-        }
-        #controls h2 {
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: #88ccff;
-            border-bottom: 1px solid #333;
-            padding-bottom: 6px;
-        }
-        .control-group {
-            margin-bottom: 10px;
-        }
-        .control-group label {
-            display: block;
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 3px;
-        }
-        .control-group select, .control-group input[type="range"] {
-            width: 100%;
-            background: #1a1a24;
-            border: 1px solid #444;
-            color: #ddd;
-            padding: 4px;
-            border-radius: 2px;
-        }
-        .control-group input[type="text"] {
-            width: 100%;
-            background: #1a1a24;
-            border: 1px solid #444;
-            color: #ddd;
-            padding: 6px;
-            border-radius: 2px;
-            font-family: inherit;
-        }
-        .control-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .control-row input[type="checkbox"] {
-            width: auto;
-        }
-        .control-row input[type="range"] {
-            flex: 1;
-        }
-        .control-row span {
-            font-size: 10px;
-            color: #666;
-            min-width: 30px;
-        }
-        button {
-            background: #2a4a6a;
-            border: 1px solid #3a6a9a;
-            color: #ddd;
-            padding: 6px 12px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: inherit;
-            margin-right: 4px;
-        }
-        button:hover { background: #3a5a7a; }
-        button.active { background: #4a7aaa; border-color: #6a9aca; }
-
-        #info {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(20, 20, 30, 0.9);
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 12px;
-            min-width: 200px;
-            z-index: 100;
-        }
-        #info h3 {
-            font-size: 12px;
-            color: #88ccff;
-            margin-bottom: 8px;
-        }
-        #info .stat {
-            font-size: 11px;
-            margin: 4px 0;
-        }
-        #info .stat span { color: #ffcc44; }
-
-        #tooltip {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid #555;
-            border-radius: 3px;
-            padding: 8px 12px;
-            font-size: 12px;
-            pointer-events: none;
-            display: none;
-            z-index: 200;
-        }
-        #tooltip .codon { font-size: 16px; font-weight: bold; color: #ffcc44; }
-        #tooltip .aa { color: #88ff88; }
-
-        #sequence-panel {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(20, 20, 30, 0.9);
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 12px;
-            z-index: 100;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        #sequence-panel h3 {
-            font-size: 12px;
-            color: #88ccff;
-            margin-bottom: 8px;
-        }
-        #sequence-output {
-            font-size: 11px;
-            line-height: 1.6;
-        }
-        .codon-chip {
-            display: inline-block;
-            padding: 2px 6px;
-            margin: 2px;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .codon-chip:hover { transform: scale(1.1); }
-        .codon-chip.active { box-shadow: 0 0 8px #fff; }
-
-        #legend {
-            position: fixed;
-            bottom: 170px;
-            right: 10px;
-            background: rgba(20, 20, 30, 0.9);
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 10px;
-            z-index: 100;
-        }
-        #legend h4 { font-size: 11px; color: #888; margin-bottom: 6px; }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            font-size: 10px;
-            margin: 3px 0;
-        }
-        .legend-color {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-    </style>
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <div id="container"></div>
 
     <div id="controls">
-        <h2>Hyperbolic Codon Space</h2>
-        <div class="control-group">
+      <h2>Hyperbolic Codon Space</h2>
+
+      <!-- View Section - Always visible -->
+      <div class="control-section" data-section="view">
+        <div class="section-header" onclick="toggleSection('view')">
+          <span class="section-toggle">&#9660;</span> View
+        </div>
+        <div class="section-content">
+          <div class="control-group">
             <label>Projection</label>
             <select id="projectionMode">
-                <option value="poincare">Poincare Disk (d → radius)</option>
-                <option value="pca">PCA 3D</option>
-                <option value="hemisphere">Hemisphere</option>
+              <option value="poincare">Poincare Disk (d -> radius)</option>
+              <option value="pca">PCA 3D</option>
+              <option value="hemisphere">Hemisphere</option>
             </select>
-        </div>
-        <div class="control-group">
+          </div>
+          <div class="control-group">
             <label>Color By</label>
             <select id="colorBy">
+              <optgroup label="Embedding Properties">
                 <option value="depth">Depth (0-9)</option>
-                <option value="amino_acid">Amino Acid</option>
-                <option value="margin">Margin (basin boundary)</option>
                 <option value="confidence">Confidence</option>
+                <option value="margin">Margin (basin boundary)</option>
+                <option value="embedding_norm">Embedding Norm</option>
+              </optgroup>
+              <optgroup label="Genetic Code">
+                <option value="amino_acid">Amino Acid</option>
+                <option value="degeneracy">Degeneracy (1-6 fold)</option>
+                <option value="gc_content">GC Content (%)</option>
+                <option value="wobble">Wobble Base (3rd pos)</option>
+              </optgroup>
+              <optgroup label="Biochemical">
+                <option value="hydrophobicity">Hydrophobicity</option>
+                <option value="molecular_weight">Molecular Weight</option>
+                <option value="chemical_class">Chemical Class</option>
+              </optgroup>
+              <optgroup label="Sequence">
                 <option value="sequence">Sequence Position</option>
+              </optgroup>
             </select>
-        </div>
-        <div class="control-group">
+          </div>
+          <div class="control-group">
             <label>Trajectory Style</label>
             <select id="trajectoryStyle">
-                <option value="geodesic">Geodesic Arcs</option>
-                <option value="spiral">Spiral Path</option>
-                <option value="linear">Linear</option>
+              <option value="geodesic">Geodesic Arcs</option>
+              <option value="spiral">Spiral Path</option>
+              <option value="linear">Linear</option>
             </select>
+          </div>
         </div>
-        <div class="control-group">
-            <label>Fiber Mode</label>
-            <select id="fiberMode">
+      </div>
+
+      <!-- Structures Section -->
+      <div class="control-section" data-section="structures">
+        <div class="section-header" onclick="toggleSection('structures')">
+          <span class="section-toggle">&#9660;</span> Structures
+        </div>
+        <div class="section-content">
+          <div class="control-group">
+            <div class="control-row">
+              <label><input type="checkbox" id="showDepthRings" checked />
+                <span id="labelDepthRings">Depth Rings</span></label>
+            </div>
+            <div class="control-row">
+              <label><input type="checkbox" id="showHierarchyTree" />
+                <span id="labelHierarchyTree">Hierarchy Tree</span></label>
+            </div>
+            <div class="control-row">
+              <label><input type="checkbox" id="showAllCodons" checked /> All Codons</label>
+            </div>
+            <div class="control-row" id="clusterCentersRow">
+              <label><input type="checkbox" id="showClusterCenters" />
+                <span id="labelClusterCenters">Cluster Centers</span></label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>Connections</label>
+            <div class="control-row">
+              <label><input type="checkbox" id="showFibers" /> Show</label>
+              <select id="fiberMode" style="flex: 1; margin-left: 8px;">
                 <option value="none">None</option>
-                <option value="hierarchical" selected>Hierarchical (same depth)</option>
-                <option value="amino_acid">Amino Acid (synonymous)</option>
-                <option value="depth">Depth (adjacent levels)</option>
-            </select>
+                <option value="hierarchical" selected>Hierarchical</option>
+                <option value="amino_acid">Amino Acid</option>
+                <option value="depth">Adjacent Depth</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="control-group">
-            <label>Show Structures</label>
-            <div class="control-row">
-                <label><input type="checkbox" id="showDepthRings" checked> Depth Rings</label>
-            </div>
-            <div class="control-row">
-                <label><input type="checkbox" id="showHierarchyTree"> Hierarchy Tree</label>
-            </div>
-            <div class="control-row">
-                <label><input type="checkbox" id="showAllCodons" checked> All Codons</label>
-            </div>
-            <div class="control-row">
-                <label><input type="checkbox" id="showFibers"> Show Fibers</label>
-            </div>
-            <div class="control-row">
-                <label><input type="checkbox" id="showClusterCenters"> Cluster Centers (AA)</label>
-            </div>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="control-section" data-section="filters">
+        <div class="section-header" onclick="toggleSection('filters')">
+          <span class="section-toggle">&#9660;</span> Filters <span id="filterInfo" class="section-info">64/64</span>
         </div>
-        <div class="control-group">
+        <div class="section-content">
+          <div class="control-group">
+            <div class="control-row">
+              <span style="min-width: 45px; font-size: 10px;">Depth:</span>
+              <input type="range" id="depthFilterMin" min="0" max="9" value="0" style="flex: 1;" />
+              <input type="range" id="depthFilterMax" min="0" max="9" value="9" style="flex: 1;" />
+              <span id="depthFilterLabel" style="min-width: 35px; font-size: 10px; text-align: right;">0-9</span>
+            </div>
+            <div class="control-row">
+              <span style="min-width: 45px; font-size: 10px;">AA:</span>
+              <select id="aminoAcidFilter" style="flex: 1;">
+                <option value="all">All (21 types)</option>
+                <optgroup label="Hydrophobic (8)">
+                  <option value="A">A - Alanine</option>
+                  <option value="V">V - Valine</option>
+                  <option value="L">L - Leucine</option>
+                  <option value="I">I - Isoleucine</option>
+                  <option value="M">M - Methionine</option>
+                  <option value="F">F - Phenylalanine</option>
+                  <option value="W">W - Tryptophan</option>
+                  <option value="P">P - Proline</option>
+                </optgroup>
+                <optgroup label="Polar (7)">
+                  <option value="S">S - Serine</option>
+                  <option value="T">T - Threonine</option>
+                  <option value="N">N - Asparagine</option>
+                  <option value="Q">Q - Glutamine</option>
+                  <option value="Y">Y - Tyrosine</option>
+                  <option value="C">C - Cysteine</option>
+                  <option value="G">G - Glycine</option>
+                </optgroup>
+                <optgroup label="Basic + (3)">
+                  <option value="K">K - Lysine</option>
+                  <option value="R">R - Arginine</option>
+                  <option value="H">H - Histidine</option>
+                </optgroup>
+                <optgroup label="Acidic - (2)">
+                  <option value="D">D - Aspartate</option>
+                  <option value="E">E - Glutamate</option>
+                </optgroup>
+                <optgroup label="Special">
+                  <option value="*">* - Stop (3 codons)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="control-row" style="margin-top: 4px;">
+              <button id="resetFiltersBtn" style="font-size: 10px; padding: 3px 8px;">Reset Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Encoding Section -->
+      <div class="control-section" data-section="encoding">
+        <div class="section-header" onclick="toggleSection('encoding')">
+          <span class="section-toggle">&#9660;</span> DNA Encoding
+        </div>
+        <div class="section-content">
+          <div class="control-group">
             <label>DNA Sequence</label>
-            <input type="text" id="dnaInput" placeholder="ATGGCTCTGTGG...">
-            <div id="dnaValidation" style="font-size: 10px; margin-top: 3px; min-height: 14px;"></div>
-        </div>
-        <div class="control-group">
+            <form id="dnaForm" style="display: contents">
+              <select id="sequenceList" style="margin-bottom: 6px; display: none; font-size: 11px">
+                <option value="">-- Select Sequence --</option>
+              </select>
+              <input type="text" id="dnaInput" placeholder="ATGGCTCTGTGG..." />
+            </form>
+            <div id="dnaValidation" style="font-size: 10px; margin-top: 3px; min-height: 14px"></div>
+          </div>
+          <div class="control-group">
             <button id="encodeBtn">Encode</button>
             <button id="clearBtn">Clear</button>
             <button id="resetView">Reset View</button>
-        </div>
-        <div class="control-group">
+          </div>
+          <div class="control-group">
             <label>Synonymous Overlay</label>
-            <button id="loadActbBtn" style="font-size: 10px;">Load ACTB</button>
-            <button id="clearOverlayBtn" style="font-size: 10px;">Clear Overlay</button>
-            <select id="variantSelect" style="margin-top: 4px; font-size: 10px;">
-                <option value="">-- Select Variant --</option>
+            <button id="loadActbBtn" style="font-size: 10px">Load ACTB</button>
+            <button id="clearOverlayBtn" style="font-size: 10px">Clear Overlay</button>
+            <select id="variantSelect" style="margin-top: 4px; font-size: 10px">
+              <option value="">-- Select Variant --</option>
             </select>
+          </div>
         </div>
+      </div>
+
+      <!-- Tools Section -->
+      <div class="control-section" data-section="tools">
+        <div class="section-header" onclick="toggleSection('tools')">
+          <span class="section-toggle">&#9660;</span> Tools
+        </div>
+        <div class="section-content">
+          <div class="control-group">
+            <label>Search <span style="font-size: 9px; color: #666;">(Ctrl+F)</span></label>
+            <input type="text" id="codonSearch" placeholder="ATG, Met, M..." style="text-transform: uppercase;" />
+            <div id="searchResults" style="font-size: 10px; margin-top: 3px; min-height: 14px;"></div>
+          </div>
+          <div class="control-group">
+            <div class="control-row">
+              <label><input type="checkbox" id="measureMode" /> Measure Distance</label>
+            </div>
+            <div class="control-row">
+              <label><input type="checkbox" id="showMutationNetwork" /> Mutation Network</label>
+            </div>
+            <div id="measureResult" style="font-size: 10px; margin-top: 4px; color: #ffcc44; min-height: 14px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animation Section - Collapsed by default -->
+      <div class="control-section collapsed" data-section="animation">
+        <div class="section-header" onclick="toggleSection('animation')">
+          <span class="section-toggle">&#9654;</span> Animation
+        </div>
+        <div class="section-content">
+          <div class="control-group">
+            <div class="control-row">
+              <button id="animateBtn" style="font-size: 10px; flex: 1;">&#9654; Play</button>
+              <input type="range" id="animationSpeed" min="100" max="2000" value="500" style="flex: 1;" />
+              <span id="speedLabel" style="font-size: 9px; min-width: 40px;">500ms</span>
+            </div>
+            <div id="animationStatus" style="font-size: 10px; margin-top: 3px; color: #88ccff;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Section - Collapsed by default -->
+      <div class="control-section collapsed" data-section="export">
+        <div class="section-header" onclick="toggleSection('export')">
+          <span class="section-toggle">&#9654;</span> Export
+        </div>
+        <div class="section-content">
+          <div class="control-group">
+            <div class="control-row">
+              <button id="exportPngBtn" style="font-size: 10px;">PNG</button>
+              <button id="exportSvgBtn" style="font-size: 10px;">SVG</button>
+              <button id="exportCsvBtn" style="font-size: 10px;">CSV</button>
+              <button id="exportJsonBtn" style="font-size: 10px;">JSON</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Codon Usage Section - Collapsed by default -->
+      <div class="control-section collapsed" data-section="usage">
+        <div class="section-header" onclick="toggleSection('usage')">
+          <span class="section-toggle">&#9654;</span> Codon Usage
+        </div>
+        <div class="section-content">
+          <div class="control-group">
+            <label>Organism bias</label>
+            <select id="organismSelect" style="font-size: 11px;">
+              <option value="none">None (no bias)</option>
+              <option value="ecoli">E. coli K12</option>
+              <option value="yeast">S. cerevisiae</option>
+              <option value="human">H. sapiens</option>
+              <option value="mouse">M. musculus</option>
+            </select>
+            <div id="usageStats" style="font-size: 10px; margin-top: 4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shortcuts-footer">
+        <strong>Shortcuts:</strong> F - Search | R - Reset | Space - Play/Pause | 1-3 - Projections<br/>
+        <strong>Mouse:</strong> Drag - Rotate | Scroll - Zoom | Right-drag - Pan
+      </div>
     </div>
 
     <div id="info">
+      <div class="panel-header" onclick="togglePanel('info')">
         <h3>Hyperbolic Metrics</h3>
+        <span class="panel-toggle">&#9660;</span>
+      </div>
+      <div class="panel-content">
         <div class="stat">Version: <span id="infoVersion">-</span></div>
-        <div class="stat">Structure ρ: <span id="infoStructure">-</span></div>
+        <div class="stat">Structure p: <span id="infoStructure">-</span></div>
         <div class="stat">Sequence: <span id="infoSeqLen">-</span></div>
         <div class="stat">Geodesic Dist: <span id="infoGeoDist">-</span></div>
-        <h3 style="margin-top: 12px;">Angular Variance <span style="font-size: 9px; color: #666;">(Poincare)</span></h3>
+        <h3 style="margin-top: 12px">
+          Angular Variance
+          <span style="font-size: 9px; color: #666">(Poincare)</span>
+        </h3>
         <div class="stat">Intra-AA: <span id="infoIntraVar">-</span></div>
         <div class="stat">Inter-AA: <span id="infoInterVar">-</span></div>
         <div class="stat">Ratio (I/i): <span id="infoVarRatio">-</span></div>
-        <button id="loadVarianceBtn" style="margin-top: 6px; font-size: 10px;">Load Variance</button>
+        <button id="loadVarianceBtn" style="margin-top: 6px; font-size: 10px">
+          Load Variance
+        </button>
+      </div>
     </div>
 
     <div id="tooltip"></div>
 
     <div id="legend">
+      <div class="panel-header" onclick="togglePanel('legend')">
         <h4>Depth Level</h4>
-        <div id="legendContent"></div>
+        <span class="panel-toggle">&#9660;</span>
+      </div>
+      <div class="panel-content" id="legendContent"></div>
     </div>
 
     <div id="sequence-panel">
-        <h3>Encoded Sequence</h3>
-        <div id="sequence-output">Enter DNA sequence above and click Encode</div>
+      <div class="panel-header">
+        <div style="display: flex; align-items: center;">
+          <span class="panel-toggle" onclick="togglePanel('sequence-panel')" style="cursor: pointer; margin-right: 6px;">&#9660;</span>
+          <h3 onclick="togglePanel('sequence-panel')" style="cursor: pointer;">Encoded Sequence</h3>
+        </div>
+        <div>
+          <button class="expand-btn" onclick="toggleSequenceExpand()" title="Expand/Shrink">&#8597;</button>
+        </div>
+      </div>
+      <div class="panel-content" id="sequence-output">Enter DNA sequence above and click Encode</div>
     </div>
 
+    <script>
+      // Section toggle function
+      function toggleSection(sectionName) {
+        const section = document.querySelector(`[data-section="${sectionName}"]`);
+        if (section) {
+          section.classList.toggle('collapsed');
+          const toggle = section.querySelector('.section-toggle');
+          if (section.classList.contains('collapsed')) {
+            toggle.innerHTML = '&#9654;'; // Right arrow
+          } else {
+            toggle.innerHTML = '&#9660;'; // Down arrow
+          }
+        }
+      }
+
+      // Panel toggle function for side panels
+      function togglePanel(panelId) {
+        const panel = document.getElementById(panelId);
+        if (panel) {
+          panel.classList.toggle('collapsed');
+          const toggle = panel.querySelector('.panel-toggle');
+          if (panel.classList.contains('collapsed')) {
+            toggle.innerHTML = '&#9654;';
+          } else {
+            toggle.innerHTML = '&#9660;';
+          }
+        }
+      }
+
+      // Sequence panel expand/shrink
+      function toggleSequenceExpand() {
+        const panel = document.getElementById('sequence-panel');
+        if (panel) {
+          panel.classList.toggle('expanded');
+          // Also uncollapse if collapsed
+          if (panel.classList.contains('collapsed')) {
+            panel.classList.remove('collapsed');
+            const toggle = panel.querySelector('.panel-toggle');
+            toggle.innerHTML = '&#9660;';
+          }
+        }
+      }
+    </script>
+
     <script type="importmap">
-    {
+      {
         "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
-    }
+      }
     </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-        // =====================================================================
-        // GLOBALS
-        // =====================================================================
-        let scene, camera, renderer, controls;
-        let pointsMesh, trajectoryGroup, depthRingsGroup, hierarchyTreeGroup, fibersGroup, clusterCentersGroup;
-        let visualizationData = null;
-        let pointsGeometry, pointsMaterial;
-        let raycaster, mouse;
-
-        // Current state
-        let currentEncodedSequence = [];
-        let currentEdges = [];
-        let projectionMode = 'poincare';
-        let serverConfig = {};
-        let angularVarianceData = null;
-        let synonymousVariants = [];
-        let overlayTrajectoryGroup = null;
-
-        // Default colors (overwritten by server config when loaded)
-        let DEPTH_COLORS = [
-            0xff0000, 0xff4400, 0xff8800, 0xffcc00, 0xffff00,
-            0x88ff00, 0x00ff88, 0x00ffff, 0x0088ff, 0x0000ff
-        ];
-
-        let AA_COLORS = {
-            'A': 0x8B8B00, 'V': 0x8B8B00, 'L': 0x8B8B00, 'I': 0x8B8B00,
-            'M': 0x8B8B00, 'F': 0x8B8B00, 'W': 0x8B8B00, 'P': 0x8B8B00,
-            'S': 0x00CED1, 'T': 0x00CED1, 'N': 0x00CED1, 'Q': 0x00CED1,
-            'Y': 0x00CED1, 'C': 0x00CED1, 'G': 0x00CED1,
-            'K': 0x0000FF, 'R': 0x0000FF, 'H': 0x0000FF,
-            'D': 0xFF0000, 'E': 0xFF0000,
-            '*': 0x808080
-        };
-
-        // Parse hex color string to number
-        function parseColorHex(hex) {
-            if (typeof hex === 'number') return hex;
-            return parseInt(hex.replace('#', ''), 16);
-        }
-
-        // Update colors from server config
-        function applyServerColors(config) {
-            if (config.depth_colors) {
-                DEPTH_COLORS = config.depth_colors.map(parseColorHex);
-            }
-            if (config.aa_colors) {
-                AA_COLORS = {};
-                for (const [aa, hex] of Object.entries(config.aa_colors)) {
-                    AA_COLORS[aa] = parseColorHex(hex);
-                }
-            }
-        }
-
-        // =====================================================================
-        // HYPERBOLIC GEOMETRY UTILITIES
-        // =====================================================================
-
-        // Convert depth to Poincare disk radius (d=0 outer, d=9 center)
-        function depthToPoincareRadius(depth) {
-            // Map d=0 to r=0.9, d=9 to r=0.1
-            return 0.9 - (depth / 9) * 0.8;
-        }
-
-        // Get position on Poincare disk from depth and angle
-        function poincarePosition(depth, angle, height = 0) {
-            const r = depthToPoincareRadius(depth);
-            return new THREE.Vector3(
-                r * Math.cos(angle),
-                height,
-                r * Math.sin(angle)
-            );
-        }
-
-        // Compute hyperbolic geodesic between two points in Poincare disk
-        function computeGeodesicArc(p1, p2, segments = 20) {
-            const points = [];
-
-            // Project to 2D (x, z plane)
-            const x1 = p1.x, z1 = p1.z;
-            const x2 = p2.x, z2 = p2.z;
-
-            // For Poincare disk, geodesics are circular arcs
-            // Simplified: use quadratic bezier approximation
-            const midX = (x1 + x2) / 2;
-            const midZ = (z1 + z2) / 2;
-
-            // Compute perpendicular offset for arc curvature
-            const dx = x2 - x1;
-            const dz = z2 - z1;
-            const dist = Math.sqrt(dx * dx + dz * dz);
-
-            // Handle same point case
-            if (dist < 0.0001) {
-                return [p1.clone()];
-            }
-
-            // Arc curvature based on distance from center
-            const avgRadius = (Math.sqrt(x1*x1 + z1*z1) + Math.sqrt(x2*x2 + z2*z2)) / 2;
-            const curvature = avgRadius * 0.5;
-
-            // Perpendicular direction (pointing outward from center)
-            const perpX = -dz / dist * curvature;
-            const perpZ = dx / dist * curvature;
-
-            // Control point for quadratic bezier
-            const ctrlX = midX + perpX;
-            const ctrlZ = midZ + perpZ;
-
-            // Interpolate height
-            const y1 = p1.y, y2 = p2.y;
-
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const t1 = 1 - t;
-
-                // Quadratic bezier
-                const x = t1 * t1 * x1 + 2 * t1 * t * ctrlX + t * t * x2;
-                const z = t1 * t1 * z1 + 2 * t1 * t * ctrlZ + t * t * z2;
-                const y = t1 * y1 + t * y2;
-
-                points.push(new THREE.Vector3(x, y, z));
-            }
-
-            return points;
-        }
-
-        // Compute hyperbolic distance in Poincare disk
-        function hyperbolicDistance(p1, p2) {
-            const x1 = p1.x, z1 = p1.z;
-            const x2 = p2.x, z2 = p2.z;
-
-            const r1 = Math.sqrt(x1*x1 + z1*z1);
-            const r2 = Math.sqrt(x2*x2 + z2*z2);
-
-            const eucDist = Math.sqrt((x2-x1)**2 + (z2-z1)**2);
-
-            // Handle edge cases
-            if (eucDist < 0.0001) return 0; // Same point
-            if (r1 >= 0.99 || r2 >= 0.99) return Infinity; // At boundary
-
-            // Poincare disk metric: d = 2 * arctanh(|z1 - z2| / |1 - z1*conj(z2)|)
-            // Simplified approximation
-            const arg = eucDist / (1 + r1 * r2);
-            if (arg >= 1) return Infinity; // Clamp to avoid NaN
-
-            return 2 * Math.atanh(arg);
-        }
-
-        // =====================================================================
-        // INITIALIZATION
-        // =====================================================================
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0f);
-
-            camera = new THREE.PerspectiveCamera(
-                60, window.innerWidth / window.innerHeight, 0.1, 1000
-            );
-            camera.position.set(0, 2, 2);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('container').appendChild(renderer.domElement);
-
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.target.set(0, 0, 0);
-
-            raycaster = new THREE.Raycaster();
-            raycaster.params.Points.threshold = 0.05;
-            mouse = new THREE.Vector2();
-
-            // Create groups for organization
-            depthRingsGroup = new THREE.Group();
-            hierarchyTreeGroup = new THREE.Group();
-            trajectoryGroup = new THREE.Group();
-            fibersGroup = new THREE.Group();
-            clusterCentersGroup = new THREE.Group();
-            overlayTrajectoryGroup = new THREE.Group();
-            scene.add(depthRingsGroup);
-            scene.add(hierarchyTreeGroup);
-            scene.add(trajectoryGroup);
-            scene.add(overlayTrajectoryGroup);
-            scene.add(fibersGroup);
-            scene.add(clusterCentersGroup);
-            fibersGroup.visible = false; // Hidden by default
-            clusterCentersGroup.visible = false; // Hidden by default
-
-            // Lighting
-            const ambient = new THREE.AmbientLight(0x404040, 2);
-            scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-            directional.position.set(1, 2, 1);
-            scene.add(directional);
-
-            // Event listeners
-            window.addEventListener('resize', onWindowResize);
-            renderer.domElement.addEventListener('mousemove', onMouseMove);
-
-            // Control bindings
-            document.getElementById('projectionMode').addEventListener('change', onProjectionChange);
-            document.getElementById('colorBy').addEventListener('change', updateColors);
-            document.getElementById('trajectoryStyle').addEventListener('change', () => {
-                if (currentEncodedSequence.length > 0) drawTrajectory(currentEncodedSequence);
-            });
-            document.getElementById('showDepthRings').addEventListener('change', toggleDepthRings);
-            document.getElementById('showHierarchyTree').addEventListener('change', toggleHierarchyTree);
-            document.getElementById('showAllCodons').addEventListener('change', toggleAllCodons);
-            document.getElementById('showFibers').addEventListener('change', toggleFibers);
-            document.getElementById('fiberMode').addEventListener('change', onFiberModeChange);
-            document.getElementById('showClusterCenters').addEventListener('change', toggleClusterCenters);
-
-            document.getElementById('encodeBtn').addEventListener('click', encodeSequence);
-            document.getElementById('clearBtn').addEventListener('click', clearSequence);
-            document.getElementById('resetView').addEventListener('click', resetView);
-            document.getElementById('dnaInput').addEventListener('input', validateDnaInput);
-            document.getElementById('loadVarianceBtn').addEventListener('click', loadAngularVariance);
-            document.getElementById('loadActbBtn').addEventListener('click', loadActbReference);
-            document.getElementById('clearOverlayBtn').addEventListener('click', clearOverlay);
-            document.getElementById('variantSelect').addEventListener('change', onVariantSelect);
-
-            buildLegend();
-            loadData();
-            animate();
-        }
-
-        function buildLegend() {
-            const container = document.getElementById('legendContent');
-            container.innerHTML = '';
-            for (let v = 0; v <= 9; v++) {
-                const item = document.createElement('div');
-                item.className = 'legend-item';
-                const r = depthToPoincareRadius(v);
-                item.innerHTML = `
-                    <div class="legend-color" style="background: #${DEPTH_COLORS[v].toString(16).padStart(6, '0')}"></div>
-                    <span>v=${v} (r=${r.toFixed(2)})</span>
-                `;
-                container.appendChild(item);
-            }
-        }
-
-        // =====================================================================
-        // DATA LOADING & PROJECTION
-        // =====================================================================
-        async function loadData() {
-            try {
-                const response = await fetch('/api/visualization');
-                visualizationData = await response.json();
-
-                // Store server config and apply colors
-                serverConfig = visualizationData.config || {};
-                applyServerColors(serverConfig);
-
-                document.getElementById('infoVersion').textContent =
-                    visualizationData.metadata.version || 'unknown';
-                document.getElementById('infoStructure').textContent =
-                    (visualizationData.metadata.structure_score || 0).toFixed(4);
-
-                // Rebuild legend with server colors
-                buildLegend();
-                createDepthRings();
-                createPoints();
-
-                // Load initial edges
-                await loadEdges('hierarchical');
-
-            } catch (error) {
-                console.error('Failed to load visualization data:', error);
-                createDummyData();
-            }
-        }
-
-        async function loadEdges(mode) {
-            if (mode === 'none') {
-                currentEdges = [];
-                // Only clear/render if visible
-                if (fibersGroup.visible) {
-                    fibersGroup.clear();
-                }
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/edges?mode=${mode}`);
-                currentEdges = await response.json();
-                // Only render if visible
-                if (fibersGroup.visible) {
-                    renderFibers();
-                }
-            } catch (error) {
-                console.error('Failed to load edges:', error);
-                currentEdges = [];
-            }
-        }
-
-        function renderFibers() {
-            // Skip entirely if fibers are hidden - no computation at all
-            if (!fibersGroup.visible) return;
-
-            fibersGroup.clear();
-
-            if (!visualizationData || currentEdges.length === 0) return;
-
-            const points = visualizationData.points;
-            const mode = document.getElementById('fiberMode').value;
-
-            currentEdges.forEach(edge => {
-                const p1 = points[edge.source];
-                const p2 = points[edge.target];
-
-                if (!p1 || !p2) return;
-
-                const pos1 = projectPoint(p1, edge.source);
-                const pos2 = projectPoint(p2, edge.target);
-
-                // Use geodesic arc for Poincare mode
-                let linePoints;
-                if (projectionMode === 'poincare') {
-                    linePoints = computeGeodesicArc(pos1, pos2, 10);
-                } else {
-                    linePoints = [pos1, pos2];
-                }
-
-                // Color based on fiber type
-                let color;
-                if (mode === 'amino_acid') {
-                    color = AA_COLORS[p1.amino_acid] || 0x888888;
-                } else if (mode === 'depth') {
-                    color = DEPTH_COLORS[Math.min(p1.depth, p2.depth)] || 0x888888;
-                } else {
-                    color = DEPTH_COLORS[p1.depth] || 0x888888;
-                }
-
-                // Opacity based on edge weight and margin (basin boundary)
-                const avgMargin = (p1.margin + p2.margin) / 2;
-                const opacity = 0.2 + edge.weight * 0.5 + Math.min(avgMargin * 0.3, 0.3);
-
-                const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-                const material = new THREE.LineBasicMaterial({
-                    color: color,
-                    transparent: true,
-                    opacity: Math.min(opacity, 0.8)
-                });
-
-                const line = new THREE.Line(geometry, material);
-                fibersGroup.add(line);
-            });
-        }
-
-        function toggleFibers() {
-            const show = document.getElementById('showFibers').checked;
-            fibersGroup.visible = show;
-            // Render fibers when becoming visible (they may have been skipped)
-            if (show && fibersGroup.children.length === 0) {
-                renderFibers();
-            }
-        }
-
-        async function onFiberModeChange() {
-            const mode = document.getElementById('fiberMode').value;
-            await loadEdges(mode);
-        }
-
-        function createDummyData() {
-            visualizationData = {
-                points: [],
-                edges: [],
-                metadata: { version: 'offline', structure_score: -0.83 },
-                config: {}
-            };
-
-            const bases = ['T', 'C', 'A', 'G'];
-            for (let i = 0; i < 64; i++) {
-                const b1 = bases[Math.floor(i / 16)];
-                const b2 = bases[Math.floor((i % 16) / 4)];
-                const b3 = bases[i % 4];
-                const codon = b1 + b2 + b3;
-
-                const v = i % 10;
-                visualizationData.points.push({
-                    codon: codon,
-                    amino_acid: 'X',
-                    depth: v,
-                    projection: [0, 0, 0],
-                    poincare_radius: 0.9 - (v / 9) * 0.8,
-                    embedding_norm: 0.5,
-                    confidence: 0.8,
-                    margin: 0.3,
-                    position: i,
-                    cluster_idx: i % 21
-                });
-            }
-
-            createDepthRings();
-            createPoints();
-        }
-
-        function projectPoint(point, index) {
-            const mode = document.getElementById('projectionMode').value;
-            const v = point.depth;
-
-            if (mode === 'poincare') {
-                // Distribute points around circle based on index, grouped by depth
-                const baseAngle = (index / 64) * Math.PI * 2;
-                const jitter = (point.position || index) * 0.1;
-                return poincarePosition(v, baseAngle + jitter, 0);
-            } else if (mode === 'hemisphere') {
-                // Hemisphere: depth = latitude, position = longitude
-                const theta = (index / 64) * Math.PI * 2;
-                const phi = (1 - v / 9) * Math.PI / 2; // v=0 at equator, v=9 at pole
-                const r = 0.9;
-                return new THREE.Vector3(
-                    r * Math.cos(phi) * Math.cos(theta),
-                    r * Math.sin(phi),
-                    r * Math.cos(phi) * Math.sin(theta)
-                );
-            } else {
-                // PCA: use original projection
-                return new THREE.Vector3(
-                    point.projection[0],
-                    point.projection[1],
-                    point.projection[2]
-                );
-            }
-        }
-
-        // =====================================================================
-        // VISUALIZATION - Depth Rings
-        // =====================================================================
-        function createDepthRings() {
-            depthRingsGroup.clear();
-
-            const mode = document.getElementById('projectionMode').value;
-
-            if (mode === 'poincare') {
-                // Flat concentric rings on the XZ plane
-                for (let v = 0; v <= 9; v++) {
-                    const r = depthToPoincareRadius(v);
-                    const geometry = new THREE.RingGeometry(r - 0.005, r + 0.005, 64);
-                    const material = new THREE.MeshBasicMaterial({
-                        color: DEPTH_COLORS[v],
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        opacity: 0.3
-                    });
-                    const ring = new THREE.Mesh(geometry, material);
-                    ring.rotation.x = -Math.PI / 2;
-                    depthRingsGroup.add(ring);
-                }
-
-                // Add Poincare disk boundary
-                const boundaryGeom = new THREE.RingGeometry(0.99, 1.0, 64);
-                const boundaryMat = new THREE.MeshBasicMaterial({
-                    color: 0x444444,
-                    side: THREE.DoubleSide
-                });
-                const boundary = new THREE.Mesh(boundaryGeom, boundaryMat);
-                boundary.rotation.x = -Math.PI / 2;
-                depthRingsGroup.add(boundary);
-
-            } else if (mode === 'hemisphere') {
-                // Spherical bands on hemisphere surface
-                // Each depth level gets a band between its phi range
-                const hemisphereR = 0.9;
-                const segments = 64;
-
-                for (let v = 0; v <= 9; v++) {
-                    // Phi range for this depth level
-                    const phi = (1 - v / 9) * Math.PI / 2;
-                    const phiWidth = (Math.PI / 2) / 10; // Width of each band
-
-                    // Create spherical band geometry manually
-                    const positions = [];
-                    const indices = [];
-
-                    for (let i = 0; i <= segments; i++) {
-                        const theta = (i / segments) * Math.PI * 2;
-
-                        // Inner edge of band
-                        const phi1 = phi - phiWidth * 0.4;
-                        positions.push(
-                            hemisphereR * Math.cos(phi1) * Math.cos(theta),
-                            hemisphereR * Math.sin(phi1),
-                            hemisphereR * Math.cos(phi1) * Math.sin(theta)
-                        );
-
-                        // Outer edge of band
-                        const phi2 = phi + phiWidth * 0.4;
-                        positions.push(
-                            hemisphereR * Math.cos(phi2) * Math.cos(theta),
-                            hemisphereR * Math.sin(phi2),
-                            hemisphereR * Math.cos(phi2) * Math.sin(theta)
-                        );
-                    }
-
-                    // Create triangle strip indices
-                    for (let i = 0; i < segments; i++) {
-                        const a = i * 2;
-                        const b = i * 2 + 1;
-                        const c = i * 2 + 2;
-                        const d = i * 2 + 3;
-                        indices.push(a, b, c, b, d, c);
-                    }
-
-                    const bandGeometry = new THREE.BufferGeometry();
-                    bandGeometry.setAttribute('position',
-                        new THREE.Float32BufferAttribute(positions, 3));
-                    bandGeometry.setIndex(indices);
-                    bandGeometry.computeVertexNormals();
-
-                    const bandMaterial = new THREE.MeshBasicMaterial({
-                        color: DEPTH_COLORS[v],
-                        transparent: true,
-                        opacity: 0.25,
-                        side: THREE.DoubleSide
-                    });
-
-                    const band = new THREE.Mesh(bandGeometry, bandMaterial);
-                    depthRingsGroup.add(band);
-
-                    // Also add a line at the exact phi for reference
-                    const linePoints = [];
-                    for (let i = 0; i <= segments; i++) {
-                        const theta = (i / segments) * Math.PI * 2;
-                        linePoints.push(new THREE.Vector3(
-                            hemisphereR * Math.cos(phi) * Math.cos(theta),
-                            hemisphereR * Math.sin(phi),
-                            hemisphereR * Math.cos(phi) * Math.sin(theta)
-                        ));
-                    }
-                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-                    const lineMaterial = new THREE.LineBasicMaterial({
-                        color: DEPTH_COLORS[v],
-                        transparent: true,
-                        opacity: 0.7
-                    });
-                    const line = new THREE.Line(lineGeometry, lineMaterial);
-                    depthRingsGroup.add(line);
-                }
-
-                // Add hemisphere wireframe for context
-                const wireGeometry = new THREE.SphereGeometry(hemisphereR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-                const wireMaterial = new THREE.MeshBasicMaterial({
-                    color: 0x333344,
-                    wireframe: true,
-                    transparent: true,
-                    opacity: 0.15
-                });
-                const wireframe = new THREE.Mesh(wireGeometry, wireMaterial);
-                depthRingsGroup.add(wireframe);
-
-            } else {
-                // PCA mode: no rings (they don't correspond to the projection)
-                // Could add bounding box or axis guides here
-            }
-        }
-
-        function toggleDepthRings() {
-            depthRingsGroup.visible = document.getElementById('showDepthRings').checked;
-        }
-
-        // =====================================================================
-        // VISUALIZATION - Points
-        // =====================================================================
-        function createPoints() {
-            if (pointsMesh) {
-                scene.remove(pointsMesh);
-                pointsGeometry.dispose();
-                pointsMaterial.dispose();
-            }
-
-            const points = visualizationData.points;
-            const positions = new Float32Array(points.length * 3);
-            const colors = new Float32Array(points.length * 3);
-            const sizes = new Float32Array(points.length);
-
-            const colorMode = document.getElementById('colorBy').value;
-
-            points.forEach((p, i) => {
-                const pos = projectPoint(p, i);
-                positions[i * 3] = pos.x;
-                positions[i * 3 + 1] = pos.y;
-                positions[i * 3 + 2] = pos.z;
-
-                const color = getColorForPoint(p, colorMode, i);
-                colors[i * 3] = color.r;
-                colors[i * 3 + 1] = color.g;
-                colors[i * 3 + 2] = color.b;
-
-                // Size based on confidence and margin
-                // High confidence = clear cluster assignment = larger
-                // High margin = clear basin boundary = larger
-                const baseSize = 0.08;
-                const confidenceBonus = (p.confidence || 0.5) * 0.04;
-                const marginBonus = Math.min((p.margin || 0) * 0.5, 0.04);
-                sizes[i] = baseSize + confidenceBonus + marginBonus;
-            });
-
-            pointsGeometry = new THREE.BufferGeometry();
-            pointsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            pointsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            pointsGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-            // Custom shader for per-vertex sizes
-            pointsMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    opacity: { value: 0.85 }
-                },
-                vertexShader: `
-                    attribute float size;
-                    varying vec3 vColor;
-                    void main() {
-                        vColor = color;
-                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                        gl_PointSize = size * (300.0 / -mvPosition.z);
-                        gl_Position = projectionMatrix * mvPosition;
-                    }
-                `,
-                fragmentShader: `
-                    uniform float opacity;
-                    varying vec3 vColor;
-                    void main() {
-                        // Circular point with soft edge
-                        vec2 center = gl_PointCoord - vec2(0.5);
-                        float dist = length(center);
-                        if (dist > 0.5) discard;
-                        float alpha = opacity * (1.0 - smoothstep(0.3, 0.5, dist));
-                        gl_FragColor = vec4(vColor, alpha);
-                    }
-                `,
-                transparent: true,
-                vertexColors: true,
-                depthWrite: false
-            });
-
-            pointsMesh = new THREE.Points(pointsGeometry, pointsMaterial);
-            scene.add(pointsMesh);
-        }
-
-        function getColorForPoint(p, mode, seqIndex = 0) {
-            if (mode === 'depth') {
-                return new THREE.Color(DEPTH_COLORS[p.depth] || 0xffffff);
-            } else if (mode === 'amino_acid') {
-                return new THREE.Color(AA_COLORS[p.amino_acid] || 0xffffff);
-            } else if (mode === 'margin') {
-                // Margin: low (red/dark) = near basin boundary, high (green/bright) = clear separation
-                const margin = Math.min((p.margin || 0) / 2, 1); // Normalize
-                return new THREE.Color().setHSL(margin * 0.4, 0.9, 0.3 + margin * 0.4);
-            } else if (mode === 'confidence') {
-                // Confidence: low (red) to high (green)
-                const conf = p.confidence || 0.5;
-                return new THREE.Color().setHSL(conf * 0.35, 0.9, 0.5);
-            } else if (mode === 'sequence') {
-                const t = seqIndex / 64;
-                return new THREE.Color().setHSL(t * 0.8, 0.9, 0.5);
-            }
-            return new THREE.Color(0xffffff);
-        }
-
-        function updateColors() {
-            if (!pointsGeometry || !visualizationData) return;
-
-            const colors = pointsGeometry.attributes.color.array;
-            const colorMode = document.getElementById('colorBy').value;
-
-            visualizationData.points.forEach((p, i) => {
-                const color = getColorForPoint(p, colorMode, i);
-                colors[i * 3] = color.r;
-                colors[i * 3 + 1] = color.g;
-                colors[i * 3 + 2] = color.b;
-            });
-
-            pointsGeometry.attributes.color.needsUpdate = true;
-        }
-
-        function toggleAllCodons() {
-            if (pointsMesh) {
-                pointsMesh.visible = document.getElementById('showAllCodons').checked;
-            }
-        }
-
-        // =====================================================================
-        // VISUALIZATION - Cluster Centers (Amino Acids)
-        // =====================================================================
-        function createClusterCenters() {
-            clusterCentersGroup.clear();
-
-            if (!visualizationData || !visualizationData.cluster_centers_3d) return;
-
-            const centers = visualizationData.cluster_centers_3d;
-
-            centers.forEach((center, idx) => {
-                // Create sphere for cluster center
-                const geometry = new THREE.SphereGeometry(0.04, 16, 16);
-                const color = AA_COLORS[center.amino_acid] || 0xffffff;
-                const material = new THREE.MeshBasicMaterial({
-                    color: color,
-                    transparent: true,
-                    opacity: 0.9
-                });
-                const sphere = new THREE.Mesh(geometry, material);
-
-                // Position based on projection mode
-                if (projectionMode === 'pca') {
-                    sphere.position.set(
-                        center.position[0],
-                        center.position[1],
-                        center.position[2]
-                    );
-                } else {
-                    // For Poincare/Hemisphere, average position of codons in this cluster
-                    let avgX = 0, avgY = 0, avgZ = 0, count = 0;
-                    visualizationData.points.forEach((p, idx) => {
-                        if (p.cluster_idx === center.cluster_idx) {
-                            const pos = projectPoint(p, idx);
-                            avgX += pos.x;
-                            avgY += pos.y;
-                            avgZ += pos.z;
-                            count++;
-                        }
-                    });
-                    if (count > 0) {
-                        sphere.position.set(
-                            avgX / count,
-                            avgY / count + 0.1, // Slight elevation
-                            avgZ / count
-                        );
-                    }
-                }
-
-                // Add text sprite for amino acid label
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 64;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 48px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(center.amino_acid, 32, 32);
-
-                const texture = new THREE.CanvasTexture(canvas);
-                const spriteMaterial = new THREE.SpriteMaterial({
-                    map: texture,
-                    transparent: true
-                });
-                const sprite = new THREE.Sprite(spriteMaterial);
-                sprite.position.copy(sphere.position);
-                sprite.position.y += 0.08;
-                sprite.scale.set(0.1, 0.1, 1);
-
-                clusterCentersGroup.add(sphere);
-                clusterCentersGroup.add(sprite);
-            });
-        }
-
-        function toggleClusterCenters() {
-            const show = document.getElementById('showClusterCenters').checked;
-            if (show && clusterCentersGroup.children.length === 0) {
-                createClusterCenters();
-            }
-            clusterCentersGroup.visible = show;
-        }
-
-        function onProjectionChange() {
-            projectionMode = document.getElementById('projectionMode').value;
-
-            // Re-create all projection-dependent visualizations
-            createDepthRings();
-            createPoints();
-            renderFibers();
-
-            // Re-create cluster centers if visible
-            if (document.getElementById('showClusterCenters').checked) {
-                createClusterCenters();
-            }
-
-            if (currentEncodedSequence.length > 0) {
-                drawTrajectory(currentEncodedSequence);
-            }
-
-            // Re-render overlay if a variant is selected
-            const variantIdx = parseInt(document.getElementById('variantSelect').value);
-            if (!isNaN(variantIdx) && variantIdx >= 0 && variantIdx < synonymousVariants.length) {
-                drawOverlayTrajectory(synonymousVariants[variantIdx].encoded);
-            }
-
-            // Adjust camera for each view
-            if (projectionMode === 'hemisphere') {
-                camera.position.set(1.5, 1.5, 1.5);
-            } else if (projectionMode === 'pca') {
-                camera.position.set(2, 2, 2);
-            } else {
-                camera.position.set(0, 2, 2);
-            }
-            controls.update();
-        }
-
-        // =====================================================================
-        // VISUALIZATION - Hierarchy Tree
-        // =====================================================================
-        function createHierarchyTree() {
-            hierarchyTreeGroup.clear();
-
-            if (!currentEncodedSequence.length) return;
-
-            // Build tree edges connecting codons by shared prefixes
-            const material = new THREE.LineBasicMaterial({
-                color: 0x666699,
-                transparent: true,
-                opacity: 0.5
-            });
-
-            // Connect each codon to the "center" at its depth level
-            currentEncodedSequence.forEach((e, i) => {
-                const pos = getEncodedPosition(e, i);
-                const centerPos = new THREE.Vector3(0, 0.1 * e.depth, 0);
-
-                const points = [pos, centerPos];
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
-                hierarchyTreeGroup.add(line);
-            });
-        }
-
-        function toggleHierarchyTree() {
-            const show = document.getElementById('showHierarchyTree').checked;
-            if (show && currentEncodedSequence.length > 0) {
-                createHierarchyTree();
-            }
-            hierarchyTreeGroup.visible = show;
-        }
-
-        // =====================================================================
-        // VISUALIZATION - Trajectory
-        // =====================================================================
-        function getEncodedPosition(e, seqIndex) {
-            const point = visualizationData.points[e.ref_idx];
-            return projectPoint(point, e.ref_idx);
-        }
-
-        function drawTrajectory(encoded) {
-            trajectoryGroup.clear();
-            currentEncodedSequence = encoded;
-
-            if (!encoded || encoded.length === 0) return;
-
-            const style = document.getElementById('trajectoryStyle').value;
-
-            // Get all positions
-            const positions = encoded.map((e, i) => getEncodedPosition(e, i));
-
-            // Calculate total geodesic distance
-            let totalDist = 0;
-            for (let i = 1; i < positions.length; i++) {
-                totalDist += hyperbolicDistance(positions[i-1], positions[i]);
-            }
-            document.getElementById('infoGeoDist').textContent = totalDist.toFixed(2);
-            document.getElementById('infoSeqLen').textContent = encoded.length;
-
-            if (style === 'geodesic') {
-                drawGeodesicTrajectory(positions, encoded);
-            } else if (style === 'spiral') {
-                drawSpiralTrajectory(positions, encoded);
-            } else {
-                drawLinearTrajectory(positions, encoded);
-            }
-
-            // Add markers
-            addTrajectoryMarkers(positions, encoded);
-
-            // Update hierarchy tree if visible
-            if (document.getElementById('showHierarchyTree').checked) {
-                createHierarchyTree();
-            }
-        }
-
-        function drawGeodesicTrajectory(positions, encoded) {
-            for (let i = 0; i < positions.length - 1; i++) {
-                const arcPoints = computeGeodesicArc(positions[i], positions[i + 1], 15);
-
-                // Color gradient along sequence
-                const t1 = i / (positions.length - 1);
-                const t2 = (i + 1) / (positions.length - 1);
-                const color1 = new THREE.Color().setHSL(0.85 - t1 * 0.5, 1, 0.6);
-                const color2 = new THREE.Color().setHSL(0.85 - t2 * 0.5, 1, 0.6);
-
-                const colors = [];
-                for (let j = 0; j < arcPoints.length; j++) {
-                    const t = j / (arcPoints.length - 1);
-                    const c = color1.clone().lerp(color2, t);
-                    colors.push(c.r, c.g, c.b);
-                }
-
-                const geometry = new THREE.BufferGeometry().setFromPoints(arcPoints);
-                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-                const material = new THREE.LineBasicMaterial({
-                    vertexColors: true,
-                    transparent: true,
-                    opacity: 0.9
-                });
-
-                const arc = new THREE.Line(geometry, material);
-                trajectoryGroup.add(arc);
-            }
-        }
-
-        function drawSpiralTrajectory(positions, encoded) {
-            // Create a smooth spiral that visits each codon
-            const curvePoints = [];
-            const colors = [];
-
-            for (let i = 0; i < positions.length; i++) {
-                const pos = positions[i];
-                // Add vertical offset based on sequence position
-                const spiralY = (i / positions.length) * 0.5;
-                curvePoints.push(new THREE.Vector3(pos.x, spiralY, pos.z));
-
-                const t = i / (positions.length - 1 || 1);
-                const color = new THREE.Color().setHSL(0.85 - t * 0.5, 1, 0.6);
-                colors.push(color.r, color.g, color.b);
-            }
-
-            // Create smooth curve through points
-            if (curvePoints.length >= 2) {
-                const curve = new THREE.CatmullRomCurve3(curvePoints);
-                const tubeGeometry = new THREE.TubeGeometry(curve, curvePoints.length * 5, 0.01, 8, false);
-
-                const tubeMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xff88ff,
-                    transparent: true,
-                    opacity: 0.8
-                });
-
-                const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-                trajectoryGroup.add(tube);
-            }
-        }
-
-        function drawLinearTrajectory(positions, encoded) {
-            const points = [];
-            const colors = [];
-
-            for (let i = 0; i < positions.length; i++) {
-                points.push(positions[i]);
-
-                const t = i / (positions.length - 1 || 1);
-                const color = new THREE.Color().setHSL(0.85 - t * 0.5, 1, 0.6);
-                colors.push(color.r, color.g, color.b);
-            }
-
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-            const material = new THREE.LineBasicMaterial({
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.9
-            });
-
-            const line = new THREE.Line(geometry, material);
-            trajectoryGroup.add(line);
-        }
-
-        function addTrajectoryMarkers(positions, encoded) {
-            if (positions.length === 0) return;
-
-            // Start marker (green)
-            const startGeom = new THREE.SphereGeometry(0.025, 12, 12);
-            const startMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            const startMarker = new THREE.Mesh(startGeom, startMat);
-            const startPos = positions[0].clone();
-            // Adjust for spiral mode
-            if (document.getElementById('trajectoryStyle').value === 'spiral') {
-                startPos.y = 0;
-            }
-            startMarker.position.copy(startPos);
-            trajectoryGroup.add(startMarker);
-
-            // Codon label sprites for each position
-            encoded.forEach((e, i) => {
-                const pos = positions[i];
-
-                // Small sphere at each codon
-                const sphereGeom = new THREE.SphereGeometry(0.015, 8, 8);
-                const t = i / (positions.length - 1 || 1);
-                const sphereColor = new THREE.Color().setHSL(0.85 - t * 0.5, 1, 0.6);
-                const sphereMat = new THREE.MeshBasicMaterial({ color: sphereColor });
-                const sphere = new THREE.Mesh(sphereGeom, sphereMat);
-                sphere.position.copy(pos);
-                if (document.getElementById('trajectoryStyle').value === 'spiral') {
-                    sphere.position.y = (i / positions.length) * 0.5;
-                }
-                trajectoryGroup.add(sphere);
-            });
-
-            // End marker (red, larger if stop codon)
-            const endPos = positions[positions.length - 1];
-            const isStop = encoded[encoded.length - 1].amino_acid === '*';
-            const endGeom = new THREE.SphereGeometry(isStop ? 0.035 : 0.025, 12, 12);
-            const endMat = new THREE.MeshBasicMaterial({ color: isStop ? 0xff0000 : 0xff4444 });
-            const endMarker = new THREE.Mesh(endGeom, endMat);
-            endMarker.position.copy(endPos);
-            if (document.getElementById('trajectoryStyle').value === 'spiral') {
-                endMarker.position.y = 0.5;
-            }
-            trajectoryGroup.add(endMarker);
-        }
-
-        function clearTrajectory() {
-            trajectoryGroup.clear();
-            hierarchyTreeGroup.clear();
-            currentEncodedSequence = [];
-            document.getElementById('infoSeqLen').textContent = '-';
-            document.getElementById('infoGeoDist').textContent = '-';
-        }
-
-        // =====================================================================
-        // INTERACTION
-        // =====================================================================
-        function onMouseMove(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-
-            if (pointsMesh && pointsMesh.visible) {
-                const intersects = raycaster.intersectObject(pointsMesh);
-                const tooltip = document.getElementById('tooltip');
-
-                if (intersects.length > 0) {
-                    const idx = intersects[0].index;
-                    const point = visualizationData.points[idx];
-                    const pos = projectPoint(point, idx);
-
-                    tooltip.innerHTML = `
-                        <div class="codon">${point.codon}</div>
-                        <div class="aa">Amino Acid: ${point.amino_acid}</div>
-                        <div>Depth: ${point.depth}</div>
-                        <div>Poincare r: ${(point.poincare_radius || Math.sqrt(pos.x**2 + pos.z**2)).toFixed(3)}</div>
-                        <div>Confidence: ${(point.confidence || 0).toFixed(3)}</div>
-                        <div>Margin: ${(point.margin || 0).toFixed(3)}</div>
-                    `;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = (event.clientX + 15) + 'px';
-                    tooltip.style.top = (event.clientY + 15) + 'px';
-                } else {
-                    tooltip.style.display = 'none';
-                }
-            }
-        }
-
-        function validateDnaInput() {
-            const input = document.getElementById('dnaInput');
-            const validation = document.getElementById('dnaValidation');
-            const raw = input.value;
-
-            if (!raw.trim()) {
-                validation.innerHTML = '';
-                input.style.borderColor = '#444';
-                return { valid: false, reason: 'empty' };
-            }
-
-            // Check for invalid characters
-            const invalidChars = raw.toUpperCase().replace(/[ATCG\s]/g, '');
-            const validChars = raw.toUpperCase().replace(/[^ATCG]/g, '');
-
-            if (invalidChars.length > 0) {
-                const uniqueInvalid = [...new Set(invalidChars)].join('');
-                validation.innerHTML = `<span style="color: #ff6666;">Invalid: ${uniqueInvalid}</span> ` +
-                    `<span style="color: #888;">(${validChars.length} valid bases)</span>`;
-                input.style.borderColor = '#aa4444';
-                return { valid: validChars.length >= 3, reason: 'invalid_chars', clean: validChars };
-            }
-
-            // Check minimum length for codons
-            if (validChars.length < 3) {
-                validation.innerHTML = `<span style="color: #ffaa44;">Need ≥3 bases for codon</span>`;
-                input.style.borderColor = '#aa8844';
-                return { valid: false, reason: 'too_short', clean: validChars };
-            }
-
-            // Valid input
-            const nCodons = Math.floor(validChars.length / 3);
-            const remainder = validChars.length % 3;
-            let msg = `<span style="color: #66ff66;">${nCodons} codon${nCodons !== 1 ? 's' : ''}</span>`;
-            if (remainder > 0) {
-                msg += ` <span style="color: #888;">(+${remainder} trailing)</span>`;
-            }
-            validation.innerHTML = msg;
-            input.style.borderColor = '#448844';
-            return { valid: true, reason: 'ok', clean: validChars, nCodons };
-        }
-
-        async function encodeSequence() {
-            const validation = validateDnaInput();
-
-            if (!validation.valid) {
-                if (validation.reason === 'empty') {
-                    return;
-                }
-                if (validation.reason === 'too_short') {
-                    document.getElementById('sequence-output').innerHTML =
-                        '<span style="color: #ffaa44;">Sequence too short - need at least 3 bases</span>';
-                    return;
-                }
-            }
-
-            const dna = document.getElementById('dnaInput').value.trim();
-
-            try {
-                const response = await fetch('/api/encode', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sequence: dna })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    document.getElementById('sequence-output').innerHTML =
-                        `<span style="color: #ff6666;">Error: ${error.detail || 'Unknown error'}</span>`;
-                    return;
-                }
-
-                const encoded = await response.json();
-
-                if (encoded.length === 0) {
-                    document.getElementById('sequence-output').innerHTML =
-                        '<span style="color: #ffaa44;">No valid codons found in sequence</span>';
-                    return;
-                }
-
-                displayEncodedSequence(encoded);
-                drawTrajectory(encoded);
-
-            } catch (error) {
-                console.error('Encoding failed:', error);
-                document.getElementById('sequence-output').innerHTML =
-                    '<span style="color: #ff6666;">Error: Server not responding</span>';
-            }
-        }
-
-        function displayEncodedSequence(encoded) {
-            const container = document.getElementById('sequence-output');
-            container.innerHTML = '';
-
-            encoded.forEach((e, i) => {
-                const chip = document.createElement('span');
-                chip.className = 'codon-chip';
-                chip.textContent = `${e.codon}(${e.amino_acid})`;
-
-                const t = i / (encoded.length - 1 || 1);
-                const hue = 0.85 - t * 0.5;
-                chip.style.background = `hsl(${hue * 360}, 80%, 40%)`;
-                chip.style.color = '#fff';
-
-                chip.addEventListener('mouseenter', () => {
-                    chip.classList.add('active');
-                });
-                chip.addEventListener('mouseleave', () => {
-                    chip.classList.remove('active');
-                });
-
-                container.appendChild(chip);
-            });
-
-            const protein = document.createElement('div');
-            protein.style.marginTop = '8px';
-            protein.style.color = '#88ff88';
-            protein.textContent = 'Protein: ' + encoded.map(e => e.amino_acid).join('');
-            container.appendChild(protein);
-        }
-
-        function clearSequence() {
-            const input = document.getElementById('dnaInput');
-            input.value = '';
-            input.style.borderColor = '#444';
-            document.getElementById('dnaValidation').innerHTML = '';
-            document.getElementById('sequence-output').textContent =
-                'Enter DNA sequence above and click Encode';
-            clearTrajectory();
-            clearOverlay();
-        }
-
-        function clearOverlay() {
-            overlayTrajectoryGroup.clear();
-            document.getElementById('variantSelect').value = '';
-        }
-
-        function resetView() {
-            if (projectionMode === 'hemisphere') {
-                camera.position.set(1.5, 1.5, 1.5);
-            } else {
-                camera.position.set(0, 2, 2);
-            }
-            controls.target.set(0, 0, 0);
-            controls.update();
-        }
-
-        // =====================================================================
-        // ANGULAR VARIANCE ANALYSIS
-        // =====================================================================
-        async function loadAngularVariance() {
-            try {
-                const response = await fetch('/api/angular_variance');
-                angularVarianceData = await response.json();
-
-                // Update UI
-                const summary = angularVarianceData.summary;
-                document.getElementById('infoIntraVar').textContent =
-                    summary.mean_intra_variance.toFixed(4);
-                document.getElementById('infoInterVar').textContent =
-                    summary.mean_inter_variance.toFixed(4);
-                document.getElementById('infoVarRatio').textContent =
-                    summary.mean_ratio.toFixed(2);
-
-                console.log('Angular variance by depth:', angularVarianceData.by_depth);
-
-            } catch (error) {
-                console.error('Failed to load angular variance:', error);
-                document.getElementById('infoIntraVar').textContent = 'Error';
-                document.getElementById('infoInterVar').textContent = 'Error';
-                document.getElementById('infoVarRatio').textContent = '-';
-            }
-        }
-
-        // =====================================================================
-        // SYNONYMOUS VARIANTS OVERLAY
-        // =====================================================================
-        async function loadActbReference() {
-            try {
-                const response = await fetch('/api/reference/actb');
-                const data = await response.json();
-
-                synonymousVariants = data.variants;
-
-                // Populate dropdown
-                const select = document.getElementById('variantSelect');
-                select.innerHTML = '<option value="">-- Select Variant --</option>';
-
-                synonymousVariants.forEach((v, i) => {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `${v.strategy} (d̄=${v.mean_depth.toFixed(2)})`;
-                    select.appendChild(option);
-                });
-
-                // Show first variant as main trajectory
-                if (synonymousVariants.length > 0) {
-                    const first = synonymousVariants[0];
-                    displayEncodedSequence(first.encoded);
-                    drawTrajectory(first.encoded);
-                }
-
-                console.log('ACTB variants loaded:', synonymousVariants.length);
-
-            } catch (error) {
-                console.error('Failed to load ACTB reference:', error);
-                document.getElementById('sequence-output').innerHTML =
-                    '<span style="color: #ff6666;">Failed to load ACTB reference</span>';
-            }
-        }
-
-        function onVariantSelect() {
-            const select = document.getElementById('variantSelect');
-            const idx = parseInt(select.value);
-
-            if (isNaN(idx) || idx < 0 || idx >= synonymousVariants.length) {
-                overlayTrajectoryGroup.clear();
-                return;
-            }
-
-            const variant = synonymousVariants[idx];
-            drawOverlayTrajectory(variant.encoded);
-        }
-
-        function drawOverlayTrajectory(encoded) {
-            overlayTrajectoryGroup.clear();
-
-            if (!encoded || encoded.length === 0) return;
-
-            // Get positions
-            const positions = encoded.map((e, i) => {
-                const point = visualizationData.points[e.ref_idx];
-                return projectPoint(point, e.ref_idx);
-            });
-
-            // Draw as dashed line with different color
-            const points = [];
-            const colors = [];
-
-            for (let i = 0; i < positions.length; i++) {
-                points.push(positions[i]);
-
-                // Use cyan-to-yellow gradient for overlay
-                const t = i / (positions.length - 1 || 1);
-                const color = new THREE.Color().setHSL(0.15 + t * 0.35, 1, 0.6);
-                colors.push(color.r, color.g, color.b);
-            }
-
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-            const material = new THREE.LineDashedMaterial({
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.7,
-                dashSize: 0.03,
-                gapSize: 0.02
-            });
-
-            const line = new THREE.Line(geometry, material);
-            line.computeLineDistances(); // Required for dashed lines
-            overlayTrajectoryGroup.add(line);
-
-            // Add small markers at each position
-            encoded.forEach((e, i) => {
-                const pos = positions[i];
-                const sphereGeom = new THREE.SphereGeometry(0.012, 6, 6);
-                const t = i / (positions.length - 1 || 1);
-                const sphereColor = new THREE.Color().setHSL(0.15 + t * 0.35, 1, 0.6);
-                const sphereMat = new THREE.MeshBasicMaterial({
-                    color: sphereColor,
-                    transparent: true,
-                    opacity: 0.7
-                });
-                const sphere = new THREE.Mesh(sphereGeom, sphereMat);
-                sphere.position.copy(pos);
-                overlayTrajectoryGroup.add(sphere);
-            });
-        }
-
-        // =====================================================================
-        // ANIMATION LOOP
-        // =====================================================================
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        // Start
-        init();
-    </script>
-</body>
+    <script type="module" src="/static/js/main.js?v=8"></script>
+  </body>
 </html>

@@ -3,6 +3,7 @@ Codon Basin Counter - Skeptical Validation
 Counts basin occupancy without forcing genetic code semantics.
 Treats the 64 codons as learned attractors in hyperbolic space.
 """
+
 import torch
 import torch.nn as nn
 import numpy as np
@@ -16,8 +17,10 @@ class CodonEncoder(nn.Module):
     def __init__(self):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(12, 32), nn.ReLU(),
-            nn.Linear(32, 32), nn.ReLU(),
+            nn.Linear(12, 32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+            nn.ReLU(),
             nn.Linear(32, 16),
         )
 
@@ -25,7 +28,7 @@ class CodonEncoder(nn.Module):
         return self.encoder(x)
 
 
-BASES = ['T', 'C', 'A', 'G']
+BASES = ["T", "C", "A", "G"]
 ALL_64_CODONS = [b1 + b2 + b3 for b1 in BASES for b2 in BASES for b3 in BASES]
 
 
@@ -40,15 +43,15 @@ class CodonBasinCounter:
     def __init__(self, checkpoint_path: str = None):
         import os
         from pathlib import Path
+
         if checkpoint_path is None:
             default_model = Path(__file__).parent.parent / "model" / "codon_encoder.pt"
-            checkpoint_path = os.getenv('CODON_MODEL_PATH', str(default_model))
-        self.checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+            checkpoint_path = os.getenv("CODON_MODEL_PATH", str(default_model))
+        self.checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
 
         self.model = CodonEncoder()
         # Load only encoder weights
-        encoder_state = {k: v for k, v in self.checkpoint['model_state'].items()
-                         if k.startswith('encoder')}
+        encoder_state = {k: v for k, v in self.checkpoint["model_state"].items() if k.startswith("encoder")}
         self.model.load_state_dict(encoder_state)
         self.model.eval()
 
@@ -58,7 +61,7 @@ class CodonBasinCounter:
 
     def _codon_to_onehot(self, codon: str) -> np.ndarray:
         """Convert 3-letter codon to 12-dim one-hot."""
-        base_idx = {'T': 0, 'C': 1, 'A': 2, 'G': 3}
+        base_idx = {"T": 0, "C": 1, "A": 2, "G": 3}
         onehot = np.zeros(12, dtype=np.float32)
         for i, base in enumerate(codon.upper()):
             if base in base_idx:
@@ -77,7 +80,7 @@ class CodonBasinCounter:
 
     def find_nearest_basin(self, embedding: np.ndarray) -> Tuple[str, float]:
         """Find which of 64 codon basins this embedding falls into."""
-        min_dist = float('inf')
+        min_dist = float("inf")
         nearest = None
 
         for codon, ref_emb in self.codon_embeddings.items():
@@ -99,8 +102,8 @@ class CodonBasinCounter:
             Counter of which basins were hit
         """
         # Clean and extract codons
-        clean = ''.join(c.upper() for c in sequence if c.upper() in 'ATCG')
-        codons = [clean[i:i+3] for i in range(0, len(clean) - 2, 3)]
+        clean = "".join(c.upper() for c in sequence if c.upper() in "ATCG")
+        codons = [clean[i : i + 3] for i in range(0, len(clean) - 2, 3)]
 
         session_counts = Counter()
 
@@ -143,12 +146,12 @@ class CodonBasinCounter:
             second, second_dist = distances[1]
 
             results[codon] = {
-                'self_mapping': nearest == codon,
-                'nearest': nearest,
-                'nearest_dist': nearest_dist,
-                'second': second,
-                'second_dist': second_dist,
-                'margin': second_dist - nearest_dist
+                "self_mapping": nearest == codon,
+                "nearest": nearest,
+                "nearest_dist": nearest_dist,
+                "second": second,
+                "second_dist": second_dist,
+                "margin": second_dist - nearest_dist,
             }
 
         return results
@@ -156,17 +159,17 @@ class CodonBasinCounter:
     def get_basin_stats(self) -> dict:
         """Return summary statistics of basin occupancy."""
         if not self.basin_counts:
-            return {'error': 'No sequences processed yet'}
+            return {"error": "No sequences processed yet"}
 
         counts = list(self.basin_counts.values())
         total = sum(counts)
 
         return {
-            'total_codons': total,
-            'unique_basins_hit': len(self.basin_counts),
-            'most_common': self.basin_counts.most_common(10),
-            'coverage': len(self.basin_counts) / 64,
-            'entropy': self._compute_entropy(counts, total)
+            "total_codons": total,
+            "unique_basins_hit": len(self.basin_counts),
+            "most_common": self.basin_counts.most_common(10),
+            "coverage": len(self.basin_counts) / 64,
+            "entropy": self._compute_entropy(counts, total),
         }
 
     def _compute_entropy(self, counts: List[int], total: int) -> float:
@@ -194,18 +197,18 @@ def main():
 
     stability = counter.validate_basin_stability()
 
-    self_mapped = sum(1 for v in stability.values() if v['self_mapping'])
+    self_mapped = sum(1 for v in stability.values() if v["self_mapping"])
     print(f"Self-mapping codons: {self_mapped}/64 ({self_mapped/64:.1%})")
 
     # Show any codons that don't self-map
-    non_self = [(k, v) for k, v in stability.items() if not v['self_mapping']]
+    non_self = [(k, v) for k, v in stability.items() if not v["self_mapping"]]
     if non_self:
         print(f"\nCodons mapping to different basins:")
         for codon, info in non_self[:10]:
             print(f"  {codon} -> {info['nearest']} (margin: {info['margin']:.4f})")
 
     # Show margin distribution
-    margins = [v['margin'] for v in stability.values()]
+    margins = [v["margin"] for v in stability.values()]
     print(f"\nSeparation margins:")
     print(f"  Min: {min(margins):.6f}")
     print(f"  Max: {max(margins):.6f}")

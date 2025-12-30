@@ -3,9 +3,11 @@ HIV-1 Codon Basin Analysis - Skeptical Validation
 Tests: Do high-frequency basins correspond to essential proteins?
        Do low-frequency basins reveal mutation/PTM space?
 """
+
 import torch
 import numpy as np
 from collections import Counter, defaultdict
+
 try:
     from .codon_basin_counter import CodonBasinCounter, ALL_64_CODONS
 except ImportError:
@@ -141,25 +143,25 @@ AGATCTGAGCCTGGGAGCTCTCTGGCTAACTAGGGAACCCACTGCTTAAGCCTCAATAAAGCTTGCCTTGAGTGCTTCA
 # Known HIV-1 protein regions (HXB2 coordinates, 0-indexed)
 # These are empirically validated protein coding regions
 HIV_PROTEINS = {
-    'gag': (790, 2292),           # Capsid, matrix, nucleocapsid - ESSENTIAL
-    'pol': (2085, 5096),          # RT, integrase, protease - ESSENTIAL
-    'vif': (5041, 5619),          # Accessory
-    'vpr': (5559, 5850),          # Accessory
-    'tat': (5831, 6045),          # Regulatory - CRITICAL
-    'rev': (5970, 6045),          # Regulatory - CRITICAL
-    'vpu': (6062, 6310),          # Accessory
-    'env': (6225, 8795),          # gp120, gp41 - ESSENTIAL for entry
-    'nef': (8797, 9417),          # Accessory, immune evasion
+    "gag": (790, 2292),  # Capsid, matrix, nucleocapsid - ESSENTIAL
+    "pol": (2085, 5096),  # RT, integrase, protease - ESSENTIAL
+    "vif": (5041, 5619),  # Accessory
+    "vpr": (5559, 5850),  # Accessory
+    "tat": (5831, 6045),  # Regulatory - CRITICAL
+    "rev": (5970, 6045),  # Regulatory - CRITICAL
+    "vpu": (6062, 6310),  # Accessory
+    "env": (6225, 8795),  # gp120, gp41 - ESSENTIAL for entry
+    "nef": (8797, 9417),  # Accessory, immune evasion
 }
 
 # Proteins known to be essential vs variable
-ESSENTIAL_PROTEINS = {'gag', 'pol', 'env', 'tat', 'rev'}
-VARIABLE_PROTEINS = {'vif', 'vpr', 'vpu', 'nef'}
+ESSENTIAL_PROTEINS = {"gag", "pol", "env", "tat", "rev"}
+VARIABLE_PROTEINS = {"vif", "vpr", "vpu", "nef"}
 
 
 def clean_sequence(seq: str) -> str:
     """Remove whitespace and validate."""
-    return ''.join(c.upper() for c in seq if c.upper() in 'ATCG')
+    return "".join(c.upper() for c in seq if c.upper() in "ATCG")
 
 
 def analyze_hiv_genome():
@@ -193,12 +195,12 @@ def analyze_hiv_genome():
 
     print(f"\nMost frequent basins (top 10):")
     for codon, count in sorted_basins[:10]:
-        pct = count / stats['total_codons'] * 100
+        pct = count / stats["total_codons"] * 100
         print(f"  {codon}: {count:4d} ({pct:.2f}%)")
 
     print(f"\nLeast frequent basins (bottom 10):")
     for codon, count in sorted_basins[-10:]:
-        pct = count / stats['total_codons'] * 100
+        pct = count / stats["total_codons"] * 100
         print(f"  {codon}: {count:4d} ({pct:.2f}%)")
 
     # Analyze by protein region
@@ -212,10 +214,10 @@ def analyze_hiv_genome():
         region = genome[start:end]
         counts = counter.encode_and_count(region)
         protein_basins[protein] = {
-            'counts': counts,
-            'total': sum(counts.values()),
-            'unique': len(counts),
-            'top5': sorted(counts.items(), key=lambda x: -x[1])[:5]
+            "counts": counts,
+            "total": sum(counts.values()),
+            "unique": len(counts),
+            "top5": sorted(counts.items(), key=lambda x: -x[1])[:5],
         }
 
     # Compare essential vs variable proteins
@@ -224,18 +226,18 @@ def analyze_hiv_genome():
     for prot in ESSENTIAL_PROTEINS:
         if prot in protein_basins:
             info = protein_basins[prot]
-            top = ', '.join(f"{c}:{n}" for c, n in info['top5'][:3])
+            top = ", ".join(f"{c}:{n}" for c, n in info["top5"][:3])
             print(f"  {prot:4s}: {info['total']:4d} codons, {info['unique']:2d} basins | top: {top}")
-            essential_all.update(info['counts'])
+            essential_all.update(info["counts"])
 
     print("\nVARIABLE proteins (vif, vpr, vpu, nef):")
     variable_all = Counter()
     for prot in VARIABLE_PROTEINS:
         if prot in protein_basins:
             info = protein_basins[prot]
-            top = ', '.join(f"{c}:{n}" for c, n in info['top5'][:3])
+            top = ", ".join(f"{c}:{n}" for c, n in info["top5"][:3])
             print(f"  {prot:4s}: {info['total']:4d} codons, {info['unique']:2d} basins | top: {top}")
-            variable_all.update(info['counts'])
+            variable_all.update(info["counts"])
 
     # Key comparison: basin overlap and divergence
     print("\n" + "-" * 40)
@@ -271,16 +273,22 @@ def analyze_hiv_genome():
     total_variable = sum(variable_all.values())
 
     print(f"Rare basin usage:")
-    print(f"  In essential proteins: {rare_in_essential}/{total_essential} ({rare_in_essential/total_essential*100:.1f}%)")
+    print(
+        f"  In essential proteins: {rare_in_essential}/{total_essential} ({rare_in_essential/total_essential*100:.1f}%)"
+    )
     print(f"  In variable proteins:  {rare_in_variable}/{total_variable} ({rare_in_variable/total_variable*100:.1f}%)")
 
     print(f"\nCommon basin usage:")
-    print(f"  In essential proteins: {common_in_essential}/{total_essential} ({common_in_essential/total_essential*100:.1f}%)")
-    print(f"  In variable proteins:  {common_in_variable}/{total_variable} ({common_in_variable/total_variable*100:.1f}%)")
+    print(
+        f"  In essential proteins: {common_in_essential}/{total_essential} ({common_in_essential/total_essential*100:.1f}%)"
+    )
+    print(
+        f"  In variable proteins:  {common_in_variable}/{total_variable} ({common_in_variable/total_variable*100:.1f}%)"
+    )
 
     # Ratio analysis
     if rare_in_variable > 0 and rare_in_essential > 0:
-        ratio = (rare_in_variable/total_variable) / (rare_in_essential/total_essential)
+        ratio = (rare_in_variable / total_variable) / (rare_in_essential / total_essential)
         print(f"\nRare basin enrichment in variable vs essential: {ratio:.2f}x")
 
     # Which codons are never used?
@@ -298,16 +306,16 @@ def analyze_hiv_genome():
     print(f"\n" + "-" * 40)
     print("STOP CODON BASINS (TAA, TAG, TGA)")
     print("-" * 40)
-    for stop in ['TAA', 'TAG', 'TGA']:
+    for stop in ["TAA", "TAG", "TGA"]:
         count = full_counts.get(stop, 0)
         print(f"  {stop}: {count} occurrences")
 
     return {
-        'full_counts': full_counts,
-        'protein_basins': protein_basins,
-        'essential_all': essential_all,
-        'variable_all': variable_all,
-        'unused': unused
+        "full_counts": full_counts,
+        "protein_basins": protein_basins,
+        "essential_all": essential_all,
+        "variable_all": variable_all,
+        "unused": unused,
     }
 
 
