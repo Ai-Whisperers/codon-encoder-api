@@ -35,7 +35,8 @@ server.py
 | `/api/points` | GET | Codon points only |
 | `/api/edges?mode=X` | GET | Fiber connections |
 | `/api/metadata` | GET | Model metadata |
-| `/api/encode` | POST | Encode DNA sequence |
+| `/api/encode` | POST | Encode single DNA sequence |
+| `/api/encode/batch` | POST | Encode multiple sequences (JSON/FASTA/CSV/TSV) |
 | `/api/codon/{codon}` | GET | Single codon info |
 | `/api/depth/{val}` | GET | Codons at depth level |
 | `/api/angular_variance` | GET | Angular stats |

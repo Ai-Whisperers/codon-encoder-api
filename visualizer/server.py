@@ -11,11 +11,16 @@ from contextlib import asynccontextmanager
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
+import time
+import csv
+import io
+import re
+import numpy as np
 
 try:
     from .config import Config, VIS_CONFIG
@@ -89,6 +94,112 @@ class ModelPathInput(BaseModel):
     path: str
 
 
+class BatchSequenceItem(BaseModel):
+    """Single sequence in a batch."""
+    id: Optional[str] = None
+    sequence: str
+    description: Optional[str] = None
+
+
+class BatchInput(BaseModel):
+    """Batch encoding input."""
+    format: str = "json"  # json, fasta, csv, tsv
+    sequences: any  # List[BatchSequenceItem] for json, str for fasta/csv/tsv
+
+
+# =============================================================================
+# BATCH PARSING HELPERS
+# =============================================================================
+def parse_fasta(text: str) -> list[dict]:
+    """Parse FASTA format into list of sequences."""
+    sequences = []
+    current_id = None
+    current_desc = None
+    current_seq = []
+
+    for line in text.strip().split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('>'):
+            # Save previous sequence
+            if current_id is not None:
+                sequences.append({
+                    'id': current_id,
+                    'description': current_desc,
+                    'sequence': ''.join(current_seq)
+                })
+            # Parse header
+            header = line[1:].strip()
+            parts = header.split(None, 1)
+            current_id = parts[0] if parts else f'seq_{len(sequences)+1}'
+            current_desc = parts[1] if len(parts) > 1 else None
+            current_seq = []
+        else:
+            current_seq.append(line.replace(' ', '').upper())
+
+    # Don't forget last sequence
+    if current_id is not None:
+        sequences.append({
+            'id': current_id,
+            'description': current_desc,
+            'sequence': ''.join(current_seq)
+        })
+
+    return sequences
+
+
+def parse_csv_tsv(text: str, delimiter: str = ',') -> list[dict]:
+    """Parse CSV/TSV format into list of sequences."""
+    sequences = []
+    reader = csv.DictReader(io.StringIO(text), delimiter=delimiter)
+
+    for i, row in enumerate(reader):
+        # Normalize column names to lowercase
+        row_lower = {k.lower().strip(): v for k, v in row.items()}
+
+        seq = row_lower.get('sequence', '')
+        seq_id = row_lower.get('id') or row_lower.get('name') or f'seq_{i+1}'
+        desc = row_lower.get('description', '')
+
+        if seq:
+            sequences.append({
+                'id': seq_id,
+                'description': desc if desc else None,
+                'sequence': seq
+            })
+
+    return sequences
+
+
+def clean_sequence(seq: str) -> str:
+    """Clean DNA sequence, keeping only valid nucleotides."""
+    return ''.join(c.upper() for c in seq if c.upper() in 'ATCG')
+
+
+def translate_codon(codon: str) -> str:
+    """Translate a single codon to amino acid."""
+    codon_table = {
+        'TTT': 'F', 'TTC': 'F', 'TTA': 'L', 'TTG': 'L',
+        'TCT': 'S', 'TCC': 'S', 'TCA': 'S', 'TCG': 'S',
+        'TAT': 'Y', 'TAC': 'Y', 'TAA': '*', 'TAG': '*',
+        'TGT': 'C', 'TGC': 'C', 'TGA': '*', 'TGG': 'W',
+        'CTT': 'L', 'CTC': 'L', 'CTA': 'L', 'CTG': 'L',
+        'CCT': 'P', 'CCC': 'P', 'CCA': 'P', 'CCG': 'P',
+        'CAT': 'H', 'CAC': 'H', 'CAA': 'Q', 'CAG': 'Q',
+        'CGT': 'R', 'CGC': 'R', 'CGA': 'R', 'CGG': 'R',
+        'ATT': 'I', 'ATC': 'I', 'ATA': 'I', 'ATG': 'M',
+        'ACT': 'T', 'ACC': 'T', 'ACA': 'T', 'ACG': 'T',
+        'AAT': 'N', 'AAC': 'N', 'AAA': 'K', 'AAG': 'K',
+        'AGT': 'S', 'AGC': 'S', 'AGA': 'R', 'AGG': 'R',
+        'GTT': 'V', 'GTC': 'V', 'GTA': 'V', 'GTG': 'V',
+        'GCT': 'A', 'GCC': 'A', 'GCA': 'A', 'GCG': 'A',
+        'GAT': 'D', 'GAC': 'D', 'GAA': 'E', 'GAG': 'E',
+        'GGT': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G',
+    }
+    return codon_table.get(codon.upper(), '?')
+
+
 # =============================================================================
 # STATIC FILES - Mount after API routes to avoid conflicts
 # =============================================================================
@@ -158,6 +269,138 @@ async def encode_sequence(input: SequenceInput):
 
     encoded = AppState.loader.encode_sequence(clean)
     return encoded
+
+
+@app.post("/api/encode/batch")
+async def encode_batch(input: BatchInput):
+    """Encode multiple DNA sequences in batch.
+
+    Supports JSON, FASTA, CSV, and TSV formats.
+    """
+    if AppState.loader is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+    start_time = time.time()
+    sequences = []
+    errors = []
+
+    # Parse based on format
+    fmt = input.format.lower()
+    try:
+        if fmt == "json":
+            # Expect list of objects with id/sequence
+            if isinstance(input.sequences, list):
+                for i, item in enumerate(input.sequences):
+                    if isinstance(item, dict):
+                        sequences.append({
+                            'id': item.get('id') or f'seq_{i+1}',
+                            'description': item.get('description'),
+                            'sequence': item.get('sequence', '')
+                        })
+                    else:
+                        errors.append(f"Invalid item at index {i}")
+            else:
+                raise HTTPException(status_code=400, detail="JSON format requires sequences as array")
+
+        elif fmt == "fasta":
+            if not isinstance(input.sequences, str):
+                raise HTTPException(status_code=400, detail="FASTA format requires sequences as string")
+            sequences = parse_fasta(input.sequences)
+
+        elif fmt == "csv":
+            if not isinstance(input.sequences, str):
+                raise HTTPException(status_code=400, detail="CSV format requires sequences as string")
+            sequences = parse_csv_tsv(input.sequences, delimiter=',')
+
+        elif fmt == "tsv":
+            if not isinstance(input.sequences, str):
+                raise HTTPException(status_code=400, detail="TSV format requires sequences as string")
+            sequences = parse_csv_tsv(input.sequences, delimiter='\t')
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown format: {fmt}. Use json, fasta, csv, or tsv")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Parse error: {str(e)}")
+
+    # Validate limits
+    if len(sequences) > 1000:
+        raise HTTPException(status_code=400, detail="Maximum 1000 sequences per batch")
+
+    # Process each sequence
+    results = []
+    total_codons = 0
+    failed = 0
+
+    for seq_data in sequences:
+        seq_id = seq_data['id']
+        raw_seq = seq_data['sequence']
+        desc = seq_data.get('description')
+
+        # Clean sequence
+        clean = clean_sequence(raw_seq)
+
+        if len(clean) < 3:
+            errors.append(f"{seq_id}: sequence too short (< 3 nucleotides)")
+            failed += 1
+            continue
+
+        if len(clean) > 100000:
+            errors.append(f"{seq_id}: sequence too long (> 100,000 bp)")
+            failed += 1
+            continue
+
+        try:
+            encoded = AppState.loader.encode_sequence(clean)
+
+            # Compute protein translation
+            protein = ''.join(
+                translate_codon(clean[i:i+3])
+                for i in range(0, len(clean) - len(clean) % 3, 3)
+            )
+
+            # Compute stats
+            depths = [c['depth'] for c in encoded]
+            confidences = [c['confidence'] for c in encoded]
+            margins = [c['margin'] for c in encoded]
+
+            stats = {
+                'length': len(encoded),
+                'mean_depth': float(np.mean(depths)) if depths else 0,
+                'depth_std': float(np.std(depths)) if depths else 0,
+                'mean_confidence': float(np.mean(confidences)) if confidences else 0,
+                'mean_margin': float(np.mean(margins)) if margins else 0,
+            }
+
+            results.append({
+                'id': seq_id,
+                'description': desc,
+                'sequence': clean,
+                'protein': protein,
+                'encoded': encoded,
+                'stats': stats
+            })
+            total_codons += len(encoded)
+
+        except Exception as e:
+            errors.append(f"{seq_id}: encoding error - {str(e)}")
+            failed += 1
+
+    processing_time = int((time.time() - start_time) * 1000)
+
+    return {
+        'results': results,
+        'summary': {
+            'total_sequences': len(sequences),
+            'successful': len(results),
+            'failed_sequences': failed,
+            'total_codons': total_codons,
+            'processing_time_ms': processing_time
+        },
+        'errors': errors
+    }
 
 
 @app.post("/api/load_model")
