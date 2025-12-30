@@ -11,10 +11,16 @@ from dataclasses import dataclass, asdict, field
 import json
 from pathlib import Path
 
-from config import (
-    Config, VIS_CONFIG, ALL_64_CODONS,
-    CODON_TABLE, BASE_TO_IDX
-)
+try:
+    from .config import (
+        Config, VIS_CONFIG, ALL_64_CODONS,
+        CODON_TABLE, BASE_TO_IDX
+    )
+except ImportError:
+    from config import (
+        Config, VIS_CONFIG, ALL_64_CODONS,
+        CODON_TABLE, BASE_TO_IDX
+    )
 
 
 class CodonEncoder(nn.Module):

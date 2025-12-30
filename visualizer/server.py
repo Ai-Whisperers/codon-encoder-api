@@ -17,8 +17,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
 
-from config import Config, VIS_CONFIG
-from model_loader import ModelLoader, VisualizationData
+try:
+    from .config import Config, VIS_CONFIG
+    from .model_loader import ModelLoader, VisualizationData
+except ImportError:
+    from config import Config, VIS_CONFIG
+    from model_loader import ModelLoader, VisualizationData
 
 
 # =============================================================================

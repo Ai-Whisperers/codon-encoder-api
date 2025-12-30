@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # Codon Encoder API
+  # ==========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codon-api
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    volumes:
+      # Mount model file (required - not included in image)
+      - ./server/model:/app/server/model:ro
+    environment:
+      - CODON_MODEL_PATH=/app/server/model/codon_encoder.pt
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/api/metadata')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - codon-network
+
+  # ==========================================================================
+  # Cloudflare Tunnel (optional - uncomment to use)
+  # ==========================================================================
+  # tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: codon-tunnel
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run
+  #   environment:
+  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #   networks:
+  #     - codon-network
+
+networks:
+  codon-network:
+    driver: bridge
+
+# =============================================================================
+# Usage:
+# =============================================================================
+# Build and start:
+#   docker compose up -d --build
+#
+# View logs:
+#   docker compose logs -f api
+#
+# Stop:
+#   docker compose down
+#
+# With Cloudflare Tunnel:
+#   1. Create tunnel: cloudflared tunnel create codon-api
+#   2. Get token from Cloudflare dashboard
+#   3. Create .env file: CLOUDFLARE_TUNNEL_TOKEN=<your-token>
+#   4. Uncomment tunnel service above
+#   5. docker compose up -d
+# =============================================================================

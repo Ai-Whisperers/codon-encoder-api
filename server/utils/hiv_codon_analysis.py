@@ -6,7 +6,10 @@ Tests: Do high-frequency basins correspond to essential proteins?
 import torch
 import numpy as np
 from collections import Counter, defaultdict
-from codon_basin_counter import CodonBasinCounter, ALL_64_CODONS
+try:
+    from .codon_basin_counter import CodonBasinCounter, ALL_64_CODONS
+except ImportError:
+    from codon_basin_counter import CodonBasinCounter, ALL_64_CODONS
 
 # HIV-1 HXB2 Reference Genome (K03455.1) - 9719 bp
 # This is the standard reference used in HIV research

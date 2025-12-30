@@ -7,13 +7,19 @@ Usage:
     python run.py path/to/model.pt          # Use specific model
     python run.py --port 8080               # Custom port
     python run.py model.pt --host 0.0.0.0   # Expose to network
+
+For Cloudflare Tunnel:
+    python run.py --host 0.0.0.0 --port 8765
+    cloudflared tunnel --url http://localhost:8765
 """
 import sys
 import argparse
 from pathlib import Path
 
-# Add current directory to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add current directory to path for local imports
+_visualizer_dir = Path(__file__).parent
+if str(_visualizer_dir) not in sys.path:
+    sys.path.insert(0, str(_visualizer_dir))
 
 
 def main():
