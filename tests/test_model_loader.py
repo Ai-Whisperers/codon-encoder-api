@@ -292,7 +292,6 @@ class TestModelLoader:
 
         for variant in variants:
             # Check DNA translates to same protein
-            dna = variant["dna_sequence"]
             encoded = variant["encoded"]
             translated = "".join(c["amino_acid"] for c in encoded)
             assert translated == protein, f"Variant doesn't match: {translated} != {protein}"

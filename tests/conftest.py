@@ -2,7 +2,6 @@
 Pytest configuration and shared fixtures for Codon Encoder API tests.
 """
 
-import os
 import sys
 import tempfile
 from pathlib import Path
@@ -16,7 +15,8 @@ import torch.nn as nn
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from server.constants import ALL_64_CODONS, CODON_TABLE
+# Import after adding to path
+from server.constants import ALL_64_CODONS, CODON_TABLE  # noqa: E402
 
 
 # =============================================================================

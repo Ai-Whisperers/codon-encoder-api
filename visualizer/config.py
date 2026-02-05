@@ -5,7 +5,6 @@ Change MODEL_PATH to evaluate different model variants.
 
 import os
 from pathlib import Path
-from typing import Optional
 
 # =============================================================================
 # MODEL CONFIGURATION - Change this path to evaluate different models

@@ -13,8 +13,6 @@ Usage:
 
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING
 
 # Import from the local package (adjust path as needed)
 try:
@@ -22,7 +20,6 @@ try:
 except ImportError:
     # For direct execution
     from client import CodonClient
-    from models import EncodedCodon
 
 
 def example_basic_encoding():
@@ -243,7 +240,7 @@ def example_local_development():
     client = CodonClient(base_url="http://localhost:8000")
 
     # This would work if running the visualizer server locally
-    print("Connecting to local server at http://localhost:8000")
+    print(f"Connecting to local server at {client.base_url}")
     print("(Skipping actual request - run visualizer locally to test)")
 
 

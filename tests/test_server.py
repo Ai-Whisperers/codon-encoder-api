@@ -13,7 +13,6 @@ Tests all FastAPI endpoints including:
 - GET /api/reference/actb
 """
 
-import pytest
 
 
 class TestVisualizationEndpoint:

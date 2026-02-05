@@ -245,7 +245,7 @@ def main():
 
         match = "+" if pred_aa == true_aa else "-"
         print(
-            f"{codon:<6} {true_aa:<3} {pred_aa}{match:<4} {position:<10} d={depth:<4} r={radius:.4f}  dist={min_dist:.3f}"
+            f"{codon:<6} {true_aa:<3} {pred_aa}{match:<4} {position:<10} d={depth:<4} r={radius:.4f}  dist={min_dist:.3f} conf={confidence:.3f}"
         )
 
     embeddings = np.array(embeddings)
@@ -267,7 +267,7 @@ def main():
 
     # Cluster centers analysis
     centers = checkpoint["model_state"]["cluster_centers"].numpy()
-    print(f"\nCluster center radii (amino acid structure):")
+    print("\nCluster center radii (amino acid structure):")
     for aa, idx in sorted(aa_to_cluster.items(), key=lambda x: np.linalg.norm(centers[x[1]])):
         r = np.linalg.norm(centers[idx])
         print(f"  {aa}: r={r:.4f}")

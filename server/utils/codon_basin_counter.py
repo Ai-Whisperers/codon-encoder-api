@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from collections import Counter
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 
 
 class CodonEncoder(nn.Module):
@@ -203,13 +203,13 @@ def main():
     # Show any codons that don't self-map
     non_self = [(k, v) for k, v in stability.items() if not v["self_mapping"]]
     if non_self:
-        print(f"\nCodons mapping to different basins:")
+        print("\nCodons mapping to different basins:")
         for codon, info in non_self[:10]:
             print(f"  {codon} -> {info['nearest']} (margin: {info['margin']:.4f})")
 
     # Show margin distribution
     margins = [v["margin"] for v in stability.values()]
-    print(f"\nSeparation margins:")
+    print("\nSeparation margins:")
     print(f"  Min: {min(margins):.6f}")
     print(f"  Max: {max(margins):.6f}")
     print(f"  Mean: {np.mean(margins):.6f}")
@@ -225,7 +225,7 @@ def main():
     print(f"Sequence: {test_seq[:30]}...")
     print(f"Codons processed: {sum(counts.values())}")
     print(f"Unique basins hit: {len(counts)}")
-    print(f"\nBasin occupancy:")
+    print("\nBasin occupancy:")
     for codon, count in sorted(counts.items(), key=lambda x: -x[1]):
         print(f"  {codon}: {count}")
 

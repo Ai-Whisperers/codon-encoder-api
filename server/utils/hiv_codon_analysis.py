@@ -4,9 +4,8 @@ Tests: Do high-frequency basins correspond to essential proteins?
        Do low-frequency basins reveal mutation/PTM space?
 """
 
-import torch
 import numpy as np
-from collections import Counter, defaultdict
+from collections import Counter
 
 try:
     from .codon_basin_counter import CodonBasinCounter, ALL_64_CODONS
@@ -193,12 +192,12 @@ def analyze_hiv_genome():
     # Top and bottom basins
     sorted_basins = sorted(full_counts.items(), key=lambda x: -x[1])
 
-    print(f"\nMost frequent basins (top 10):")
+    print("\nMost frequent basins (top 10):")
     for codon, count in sorted_basins[:10]:
         pct = count / stats["total_codons"] * 100
         print(f"  {codon}: {count:4d} ({pct:.2f}%)")
 
-    print(f"\nLeast frequent basins (bottom 10):")
+    print("\nLeast frequent basins (bottom 10):")
     for codon, count in sorted_basins[-10:]:
         pct = count / stats["total_codons"] * 100
         print(f"  {codon}: {count:4d} ({pct:.2f}%)")
@@ -272,13 +271,13 @@ def analyze_hiv_genome():
     total_essential = sum(essential_all.values())
     total_variable = sum(variable_all.values())
 
-    print(f"Rare basin usage:")
+    print("Rare basin usage:")
     print(
         f"  In essential proteins: {rare_in_essential}/{total_essential} ({rare_in_essential/total_essential*100:.1f}%)"
     )
     print(f"  In variable proteins:  {rare_in_variable}/{total_variable} ({rare_in_variable/total_variable*100:.1f}%)")
 
-    print(f"\nCommon basin usage:")
+    print("\nCommon basin usage:")
     print(
         f"  In essential proteins: {common_in_essential}/{total_essential} ({common_in_essential/total_essential*100:.1f}%)"
     )
@@ -293,7 +292,7 @@ def analyze_hiv_genome():
 
     # Which codons are never used?
     unused = set(ALL_64_CODONS) - set(full_counts.keys())
-    print(f"\n" + "-" * 40)
+    print("\n" + "-" * 40)
     print(f"UNUSED BASINS: {len(unused)}/64")
     print("-" * 40)
     if unused:
@@ -303,7 +302,7 @@ def analyze_hiv_genome():
         print("  All 64 basins used - full combinatorial coverage")
 
     # Stop codon analysis
-    print(f"\n" + "-" * 40)
+    print("\n" + "-" * 40)
     print("STOP CODON BASINS (TAA, TAG, TGA)")
     print("-" * 40)
     for stop in ["TAA", "TAG", "TGA"]:

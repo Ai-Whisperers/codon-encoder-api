@@ -9,7 +9,7 @@ inference service. Model weights and raw embeddings are not exposed.
 
 from __future__ import annotations
 
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import Dict, List, Literal, Tuple
 
 from pydantic import BaseModel, Field, field_validator
 
