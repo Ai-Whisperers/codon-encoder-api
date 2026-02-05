@@ -10,7 +10,6 @@ import urllib.request
 import urllib.error
 import argparse
 import json
-from typing import Optional
 
 
 def check_api_health(base_url: str, timeout: int = 30, retries: int = 3) -> bool:
@@ -36,7 +35,7 @@ def check_api_health(base_url: str, timeout: int = 30, retries: int = 3) -> bool
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 if response.getcode() == 200:
                     data = json.loads(response.read().decode())
-                    print(f"✓ API is healthy")
+                    print("✓ API is healthy")
                     print(f"  Status: {response.getcode()}")
                     print(f"  Model version: {data.get('version', 'unknown')}")
                     print(f"  Embed dim: {data.get('embed_dim', 'unknown')}")
@@ -50,7 +49,7 @@ def check_api_health(base_url: str, timeout: int = 30, retries: int = 3) -> bool
         except urllib.error.URLError as e:
             print(f"✗ URL error: {e.reason}")
         except ConnectionRefusedError:
-            print(f"✗ Connection refused - is the server running?")
+            print("✗ Connection refused - is the server running?")
         except Exception as e:
             print(f"✗ Unexpected error: {e}")
             
@@ -81,7 +80,7 @@ def test_basic_endpoint(base_url: str) -> bool:
                 result = json.loads(response.read().decode())
                 if isinstance(result, list) and len(result) > 0:
                     codon_data = result[0]
-                    print(f"✓ Encode endpoint working")
+                    print("✓ Encode endpoint working")
                     print(f"  First codon: {codon_data.get('codon', 'unknown')}")
                     print(f"  Amino acid: {codon_data.get('amino_acid', 'unknown')}")
                     return True

@@ -4,7 +4,6 @@ These tests verify the API structure and basic functionality.
 """
 
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 
 def test_fastapi_app_creation():

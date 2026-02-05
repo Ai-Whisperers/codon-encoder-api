@@ -8,13 +8,11 @@ but with random weights for testing API functionality.
 import sys
 import random
 from pathlib import Path
-from typing import Dict, Any
 
 # Try importing torch, fallback to creating a minimal mock if not available
 try:
     import torch
     import torch.nn as nn
-    import numpy as np
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -84,7 +82,7 @@ def create_mock_model(output_path: Path) -> None:
         pickle.dump(model_state, f)
     
     print(f"✓ Created mock model at {output_path}")
-    print(f"  Note: This is a mock model. Install PyTorch for full functionality.")
+    print("  Note: This is a mock model. Install PyTorch for full functionality.")
 
 
 def main():
